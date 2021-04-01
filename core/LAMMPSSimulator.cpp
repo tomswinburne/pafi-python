@@ -405,7 +405,10 @@ void LAMMPSSimulator::end_of_cycle(std::string res_file, bool end) {
 */
 
 
-void LAMMPSSimulator::sample(double r, double T, double *dev) {
+void LAMMPSSimulator::sample(std::map<std::string,double> sim_param, double *dev) {
+
+  double r = sim_param["ReactionCoordinate"];
+  double T = sim_param["Temperature"];
 
   error_count = 0;
   last_error_message="";

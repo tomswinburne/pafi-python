@@ -39,7 +39,7 @@ public:
     Main sample run. Results vector should have thermalization temperature,
     sample temperature <f>, <f^2>, <psi> and <x-u>.n
   */
-  virtual void sample(double r, double T, double *dev);
+  virtual void sample(std::map<std::string,double> p, double *dev);
 
   virtual void constrained_average(std::string SampleSteps);
 

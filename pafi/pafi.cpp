@@ -94,6 +94,8 @@ int main(int narg, char **arg) {
   double p_valid,*data=NULL,*all_data=NULL;
   int total_valid, dsize = -1, raw_data_open = 0;
   DataGatherer g;
+  //SampleParameters s(params,sim.pathway_r);
+
 
   if(rank==0) std::cout<<"\n\nInitialized "<<nWorkers<<" workers "
                       "with "<<params.CoresPerWorker<<" cores per worker\n\n";
@@ -108,6 +110,7 @@ int main(int narg, char **arg) {
   generates dump_suffix, raw_file, dump_file
   */
 
+
   for(double T = params.lowT; T <= params.highT;) {
 
     // DUMP
@@ -116,10 +119,8 @@ int main(int narg, char **arg) {
 
     if(rank==0) raw_data_open = g.initialize(params,dump_file,nWorkers);
     MPI_Bcast(&raw_data_open,1,MPI_INT,0,MPI_COMM_WORLD);
-    if(raw_data_open==0) {
-      if(rank==0) std::cout<<"Could not open "<<dump_file<<"! EXIT"<<std::endl;
-      exit(-1);
-    }
+    if(raw_data_open==0) exit(-1);
+
     // DUMP
 
     if(rank==0) sim.screen_output_header(T);
@@ -130,7 +131,10 @@ int main(int narg, char **arg) {
       for(int repeat=1;repeat<=params.nRepeats+params.maxExtraRepeats;repeat++){
         // sample
         for(i=0;i<vsize;i++) dev[i] = 0.0;
-        sim.sample(r, T, dev); // sim*(params, dev)
+        std::map<std::string,double> p;
+        p["ReactionCoordinate"] = r;
+        p["Temperature"] = T;
+        sim.sample(p, dev); // sim*(params, dev)
 
         // is it valid
         valid[0] = int(sim.results["Valid"]+0.01);
@@ -154,7 +158,7 @@ int main(int narg, char **arg) {
         if(MPI_COMM_NULL != ensemble_comm)
           MPI_Gather(data,dsize,MPI_DOUBLE,all_data,dsize,MPI_DOUBLE,0,ensemble_comm);
 
-        if(rank==0) total_valid += g.ensemble(r,valid+1,all_data);
+        if(rank==0) total_valid += g.ensemble_average(r,valid+1,all_data);
 
         MPI_Bcast(&total_valid,1,MPI_INT,0,MPI_COMM_WORLD);
         p_valid = 100.0 / double(nWorkers*repeat) * total_valid;
@@ -175,7 +179,9 @@ int main(int narg, char **arg) {
         sim.write_dev(params.dump_dir+"/"+dev_file,r,dev+vsize);
 
         sim.fill_results(r,g.ens_data);
+
         sim.screen_output_line(r);
+
         g.next(); // wipe ens_data
       }
       MPI_Barrier(MPI_COMM_WORLD);
