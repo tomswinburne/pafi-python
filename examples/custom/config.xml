@@ -17,8 +17,8 @@ The format is Min, Max, number of Steps
 
 
 <Setup>
-  <!-- MUST INCLUDE forward slash -->
-  <DumpFolder>./</DumpFolder>
+  <!-- MUST INCLUDE trailing forward slash -->
+  <DumpFolder>./dumps/</DumpFolder>
   <!--
   list names of global fixes extracted during sampling- name, size
   these should be relfected in <Pre/PostSample>
