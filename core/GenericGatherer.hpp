@@ -52,7 +52,7 @@ GenericGatherer(Parser &p, int _nW, int di, int _rank) {
     initialized = 0;
   }
 
-  raw_dump_file = parser->dump_dir+"/raw_data_output_"+std::to_string(dump_index);
+  raw_dump_file = parser->dump_dir+"raw_data_output_"+std::to_string(dump_index);
 
   if(rank==0 and initialized==1) {
     if(raw.is_open()) raw.close();
@@ -77,7 +77,7 @@ void special_r_overwrite(std::vector<double> pathway_r) {
 };
 
 virtual void set_params() {
-  dev_file = parser->dump_dir+"/deviation_";
+  dev_file = parser->dump_dir+"deviation_";
   for(auto s: sweep_order) {
     params[s.first] = sample_axes[s.first][s.second];
     dev_file += s.first+"_"+std::to_string(sample_axes[s.first][s.second]);

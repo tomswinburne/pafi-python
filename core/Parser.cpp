@@ -151,7 +151,7 @@ void Parser::overwrite_xml(int nProcs) {
   configuration["ThermSteps"] = "1";
   configuration["ThermWindow"] = "1";
   configuration["nRepeats"] = "1";
-  configuration["DumpFolder"] = "./dumps";
+  configuration["DumpFolder"] = "./";
   configuration["OverDamped"] = "1";
   configuration["Friction"] = "0.1";
   configuration["MaxJump"] = "1.0";
@@ -263,7 +263,7 @@ void Parser::find_dump_file(int &suffix) {
   std::ifstream test;
   std::string params_file;
   for (suffix=0; suffix < 100; suffix++) {
-    params_file = dump_dir+"/params_"+std::to_string(suffix);
+    params_file = dump_dir+"params_"+std::to_string(suffix);
     test.open(params_file.c_str(),std::ifstream::in);
     if(test.is_open()) {
       test.close();
