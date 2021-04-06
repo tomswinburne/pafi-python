@@ -118,15 +118,15 @@ The format is Min, Max, number of Steps
   Loaded via LAMMPS read_data (see Scripts/Input below)
   -->
   <PathwayConfigurations>
-    ../EAM-SIA-Fe/image_1.dat
-    ../EAM-SIA-Fe/image_2.dat
-    ../EAM-SIA-Fe/image_3.dat
-    ../EAM-SIA-Fe/image_4.dat
-    ../EAM-SIA-Fe/image_5.dat
-    ../EAM-SIA-Fe/image_6.dat
-    ../EAM-SIA-Fe/image_7.dat
-    ../EAM-SIA-Fe/image_8.dat
-    ../EAM-SIA-Fe/image_9.dat
+    ../systems/EAM-SIA-Fe/image_1.dat
+    ../systems/EAM-SIA-Fe/image_2.dat
+    ../systems/EAM-SIA-Fe/image_3.dat
+    ../systems/EAM-SIA-Fe/image_4.dat
+    ../systems/EAM-SIA-Fe/image_5.dat
+    ../systems/EAM-SIA-Fe/image_6.dat
+    ../systems/EAM-SIA-Fe/image_7.dat
+    ../systems/EAM-SIA-Fe/image_8.dat
+    ../systems/EAM-SIA-Fe/image_9.dat
   </PathwayConfigurations>
 
 </Setup>
@@ -140,9 +140,9 @@ The format is Min, Max, number of Steps
     atom_style atomic
     atom_modify map array sort 0 0.0
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000
-    read_data  ../EAM-SIA-Fe/image_1.dat
+    read_data  ../systems/EAM-SIA-Fe/image_1.dat
     pair_style    eam/fs
-    pair_coeff * * ../EAM-SIA-Fe/Fe.eam.fs Fe
+    pair_coeff * * ../systems/EAM-SIA-Fe/Fe.eam.fs Fe
     run 0
     thermo 10
     run 0

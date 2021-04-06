@@ -1,1 +1,2 @@
-EAM-SIA-Fe/*
+systems/*/*
+!systems/EAM-SIA-Fe.tar.gz
