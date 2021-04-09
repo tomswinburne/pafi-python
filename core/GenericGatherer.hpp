@@ -52,8 +52,7 @@ GenericGatherer(Parser &p, int _nW, int di, int _rank) {
     initialized = 0;
   }
 
-  raw_dump_file = parser->dump_dir+"raw_data_output_"+std::to_string(dump_index);
-
+  raw_dump_file = parser->dump_dir+"raw_data_output_"+std::to_string(dump_index)+".csv";
   if(rank==0 and initialized==1) {
     if(raw.is_open()) raw.close();
     raw.open(raw_dump_file.c_str(),std::ofstream::out);
@@ -107,10 +106,13 @@ virtual void prepare(Holder &sim_results) {
       for(auto res: sim_results)
         ens_results[res.first] = *(new std::pair<double,double>);
 
-      raw<<"# ";
-      i = -params.size();
-      for(auto par: params) raw<<i++<<": "<<par.first<<" ";
-      for(auto res: sim_results) raw<<i++<<": "<<res.first<<"  ";
+      //raw<<"# ";
+      //i = -params.size();
+      //for(auto par: params) raw<<i++<<": "<<par.first<<" ";
+      //for(auto res: sim_results) raw<<i++<<": "<<res.first<<"  ";
+      for(auto par: params) raw<<par.first<<",";
+      raw<<"WorkerID";
+      for(auto res: sim_results) raw<<","<<res.first;
       raw<<std::endl;
     }
 
@@ -127,9 +129,14 @@ virtual int collate(int *valid) {
   int total_valid=0,i,j;
 
   // raw output
-  for(auto par: params) raw<<par.second<<" ";
-  for(i=0;i<nWorkers*dsize;i++) raw<<all_data[i]<<" ";
-  raw<<std::endl;
+
+  for(i=0;i<nWorkers;i++) {
+    for(auto par: params) raw<<par.second<<",";
+    raw<<i;
+    for(j=0;j<dsize;j++) raw<<","<<all_data[i*dsize+j];
+    raw<<std::endl;
+  }
+
 
   // unnormalize for sum
   for(j=0;j<dsize;j++) {

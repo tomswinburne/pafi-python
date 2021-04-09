@@ -22,7 +22,7 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, Holder &h,
 
   // run input script
   run_script("Input");
-  
+
   natoms=0;
   species=NULL;
   q=NULL;
@@ -401,15 +401,11 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
   refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
   lammps_free(lmp_ptr);
-
-
-
   //run_script("PostAveRun");  // collate fixes and add to results
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
   results["aveF"] = *lmp_ptr * norm_mag;
   lammps_free(lmp_ptr);
-  results["aveFstd"]=0.0; // from single worker
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
   results["stdF"] = *lmp_ptr * norm_mag * norm_mag;

@@ -64,10 +64,11 @@ public:
     std::string cmd = "run "+parser->configuration["SampleSteps"];
     LAMMPSSimulator::run_commands(cmd);
     // need to have one for each worker....
+
     for(int j=0;j<nfixes;j++) {
       int f_s = std::stoi(v[2*j+1]);
       for(int i=0;i<f_s;i++) {
-        lmp_ptr = (double *) lammps_extract_fix(lmp,&*v[2*j].begin(),0,1,i,0);
+        lmp_ptr = (double *) lammps_extract_fix(lmp,&*v[2*j].begin(),0,int(f_s>1),i,0);
         results["f_"+v[2*j]+"_"+std::to_string(i)] = *lmp_ptr;
         lammps_free(lmp_ptr);
       }
