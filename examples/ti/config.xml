@@ -10,23 +10,17 @@ If Temperature and ReactionCoordinate are not present an error will be raised
 The format is Min, Max, number of Steps
 -->
 <Parameters>
-  <Lambda>0.0 0.0 1</Lambda>
-  <ReactionCoordinate>0.0 1.0 7</ReactionCoordinate>
+  <Lambda>0. 1.0 5</Lambda>
+  <ReactionCoordinate>0.0 0.5 2</ReactionCoordinate>
   <Temperature>1. 5. 2</Temperature>
 </Parameters>
 
 
-
-
 <Setup>
+
+
   <!-- MUST INCLUDE trailing forward slash -->
   <DumpFolder>./dumps/</DumpFolder>
-
-  <!--
-  list names of global fixes extracted during sampling- name, size
-  these should be relfected in <Pre/PostSample>
-  -->
-  <SampleFixes>dV 1</SampleFixes>
 
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
@@ -83,7 +77,7 @@ The format is Min, Max, number of Steps
   <Friction> 0.05 </Friction>
 
   <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
-  <LogLammps> 1 </LogLammps>
+  <LogLammps> 0 </LogLammps>
 
   <!--
    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
@@ -130,6 +124,12 @@ The format is Min, Max, number of Steps
     ../systems/EAM-SIA-Fe/image_9.dat
   </PathwayConfigurations>
 
+  <!--
+  list names of global fixes extracted during sampling- name, size
+  these should be relfected in <Pre/PostSample>
+  -->
+  <SampleFixes>dV 1</SampleFixes>
+
 </Setup>
 
 <Scripts>
@@ -145,27 +145,30 @@ The format is Min, Max, number of Steps
     pair_style    hybrid/overlay eam/fs eam/fs
     pair_coeff * * eam/fs 1 ../systems/EAM-SIA-Fe/Fe.eam.fs Fe
     pair_coeff * * eam/fs 2 Fe_mm.eam.fs Fe
-    variable l_1 equal 1.0 - %Lambda%
-    variable l_2 equal 0.0 + %Lambda%
-    fix escale_1 all adapt 0 pair eam/fs 1 scale * * v_l_1
-    fix escale_2 all adapt 0 pair eam/fs 2 scale * * v_l_2
     run 0
   </Input>
 
   <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
   <PreRun>
+    variable l1 equal 1.0-%Lambda%
+    variable l2 equal 0.0+%Lambda%
+    run 0
+    fix escale1 all adapt 1 pair eam/fs:1 scale * * v_l1
+    fix escale2 all adapt 1 pair eam/fs:2 scale * * v_l2
+    run 0
     compute V_1 all pair eam/fs 1
     compute V_2 all pair eam/fs 2
     variable dV_2 equal c_V_2-c_V_1
     variable dV_1 equal c_V_1
   </PreRun>
 
-  <!-- fixes only applied for sampling run. these can be extracted using the
-  SampleFixes tag in Configuration -->
+  <!-- fixes only applied for sampling run.
+    SEE "SampleFixes" TAG IN "Setup" -->
   <PreSample>
-    fix dV all ave/time 1 %SampleSteps% %SampleSteps% v_dV_2 #c_V_1 c_V_2
+    fix dV all ave/time 1 %SampleSteps% %SampleSteps% v_dV_2
   </PreSample>
 
+  <!-- Disable after sampling -->
   <PostSample>
     unfix dV
   </PostSample>
@@ -175,5 +178,7 @@ The format is Min, Max, number of Steps
     variable dV delete
     uncompute V_1
     uncompute V_2
+    unfix escale1
+    unfix escale2
   </PostRun>
 </Scripts>

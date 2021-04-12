@@ -138,18 +138,24 @@ void LAMMPSSimulator::run_commands(std::vector<std::string> strv) {
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator.run_commands(): "<<std::endl;
   #endif
+  std::vector<std::string> strv_parsed;
   for(auto s:strv) {
     parser->insert_params(s,*params);
+    strv_parsed.push_back(s);
     #ifdef VERBOSE
     if(local_rank==0) std::cout<<s<<std::endl;
     #endif
     lammps_command((void *)lmp,(char *)s.c_str());
+    log_error(strv_parsed);
   }
   //MPI_Barrier(*comm);
-  log_error(strv);
+
 };
 
 void LAMMPSSimulator::run_commands(std::string strv) {
+  #ifdef VERBOSE
+  if(local_rank==0) std::cout<<"LAMMPSSimulator.run_commands():\n"<<strv<<std::endl;
+  #endif
   run_commands(parser->split_lines(strv));
 };
 
@@ -159,8 +165,12 @@ void LAMMPSSimulator::log_error(std::string lc) {
     error_count++;
     char error_message[2048];
     int error_type = lammps_get_last_error_message(lmp,error_message,2048);
+    if ((error_count==1) or (error_message!=last_error_message) )
+      if(local_rank==0) {
+        std::cout<<"LAMMPSSimulator.log_error():\n\t"<<error_message<<std::endl;
+        std::cout<<"\tFrom command: "<<lc<<std::endl;
+      }
     last_error_message = error_message;
-    std::cout<<"LAMMPSSimulator.log_error(): "<<error_message<<std::endl;
     last_command = lc+"\n";
   }
 };
@@ -170,9 +180,15 @@ void LAMMPSSimulator::log_error(std::vector<std::string> lc) {
     error_count++;
     char error_message[2048];
     int error_type = lammps_get_last_error_message(lmp,error_message,2048);
-    last_error_message = error_message;
     last_command = "";
     for(auto s:lc) last_command += s+"\n";
+    if ((error_count==1) or (error_message!=last_error_message) )
+      if(local_rank==0) {
+        std::cout<<"LAMMPSSimulator.log_error():\n\t"<<error_message<<std::endl;
+        std::cout<<"\tFrom commands: \n";
+        for(auto s:lc) std::cout<<"\t"<<s<<std::endl;
+      }
+    last_error_message = error_message;
   }
 };
 
@@ -321,7 +337,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   double r = params["ReactionCoordinate"];
   double T = params["Temperature"];
-
+  
 
   populate(r,norm_mag,0.0);
   run_script("PreRun");  // Stress Fixes

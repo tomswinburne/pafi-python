@@ -4,6 +4,8 @@
 
 # test data
 build/*
+
+build-verbose/*
 run/*
 # dev data
 example/*

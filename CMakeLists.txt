@@ -1,5 +1,7 @@
 
 cmake_minimum_required(VERSION 3.5)
+
+
 set(DEBUG 0)
 
 set(PREFIX "$ENV{PREFIX}") # example value

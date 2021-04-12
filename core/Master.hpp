@@ -89,6 +89,7 @@ void run(MPI_Comm &world,std::string parser_file) {
   MPI_Comm_create_group(world, ensemble_group, 0, &ensemble_comm);
 
 
+  int error_count,total_error_count;
 
   // see GlobalSeed
   parser.seed(instance);
@@ -103,6 +104,21 @@ void run(MPI_Comm &world,std::string parser_file) {
   if(rank==0)  std::cout<<parser.welcome_message();
 
   sim.make_path(parser.PathwayConfigurations);
+
+  error_count=sim.error_count;
+  total_error_count=0;
+  if(MPI_COMM_NULL != ensemble_comm) {}
+    MPI_Reduce(&error_count,&total_error_count,1,MPI_INT,MPI_SUM,0,ensemble_comm);
+  MPI_Bcast(&total_error_count,1,MPI_INT,0,world);
+  if(total_error_count>0) {
+    if(rank==0) {
+      std::cout<<"\n\n\n*****************************\n\n\n";
+      std::cout<<"LAMMPS errors whilst loading pathway! Exiting!";
+      std::cout<<"\n\n\n*****************************\n\n\n";
+    }
+    exit(-1);
+  }
+
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
   g.special_r_overwrite(sim.pathway_r);
 
@@ -138,6 +154,20 @@ void run(MPI_Comm &world,std::string parser_file) {
 
       // need to distribute parameters....?
       sim.sample(g.params, dev); // sim*(parser, dev)
+
+      error_count=sim.error_count;
+      total_error_count=0;
+      if(MPI_COMM_NULL != ensemble_comm) {}
+        MPI_Reduce(&error_count,&total_error_count,1,MPI_INT,MPI_SUM,0,ensemble_comm);
+      MPI_Bcast(&total_error_count,1,MPI_INT,0,world);
+      if(total_error_count>0) {
+        if(rank==0) {
+          std::cout<<"\n\n\n*****************************\n\n\n";
+          std::cout<<"LAMMPS errors during sampling! Exiting!";
+          std::cout<<"\n\n\n*****************************\n\n\n";
+        }
+        exit(-1);
+      }
 
       // is it valid
 

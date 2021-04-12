@@ -12,6 +12,8 @@
 #include <tuple>
 #include <iterator>
 #include <regex>
+#include <set>
+
 
 #include "ConstantsTypes.hpp"
 #include "rapidxml.hpp"
@@ -28,6 +30,8 @@ std::string rtws(std::string s);
 std::string welcome_message();
 
 void overwrite_xml(int nProcs);
+
+void extract_parameter_fields(std::string cstr,std::set<std::string> &matches);
 
 void set_parameters();
 
@@ -62,6 +66,8 @@ unsigned random_seed;
 std::string dump_dir;
 bool reseed, seeded, loglammps, postDump, preMin, xml_success,
   spline_path, match_planes,write_dev;
+std::set<std::string> parameter_strings;
+
 
 std::map<std::string,std::tuple<double,double,int>> parameters;
 

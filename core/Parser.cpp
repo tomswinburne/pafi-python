@@ -48,12 +48,19 @@ Parser::Parser(std::string file, bool test) {
 
   bool found_setup = false, found_scripts = false, found_scan = false;
 
+  parameter_strings.clear();
+
+
   while (root_node) {
 
     if(rtws(root_node->name())=="Setup") {
       found_setup = true;
       child_node = root_node->first_node();
+
+
       while (child_node) {
+        extract_parameter_fields(child_node->value(),parameter_strings);
+
         if(rtws(child_node->name())=="PathwayConfigurations") {
           PathwayConfigurations = split_lines(child_node->value());
         } else {
@@ -65,6 +72,8 @@ Parser::Parser(std::string file, bool test) {
       found_scan = true;
       child_node = root_node->first_node();
       while (child_node) {
+        extract_parameter_fields(child_node->value(),parameter_strings);
+
         std::vector<std::string> ss = split_line(child_node->value());
         if(ss.size()!=3)
           std::cout<<"Error in "<<child_node->value()<<" XML declaration"<<std::endl;
@@ -77,6 +86,8 @@ Parser::Parser(std::string file, bool test) {
       found_scripts = true;
       child_node = root_node->first_node();
       while (child_node) {
+        extract_parameter_fields(child_node->value(),parameter_strings);
+
         scripts[rtws(child_node->name())] = child_node->value();
         child_node = child_node->next_sibling();
       }
@@ -85,26 +96,44 @@ Parser::Parser(std::string file, bool test) {
   }
 
   if(!found_setup) {
-    std::cout<<"XML file incomplete! Provide Configuration!"<<std::endl;
+    std::cout<<"\n\tPAFI XML ERROR: file incomplete! Provide Configuration!"<<std::endl;
     return;
   }
   if(!found_scan) {
-    std::cout<<"XML file incomplete! Provide Parameters!"<<std::endl;
+    std::cout<<"\n\tPAFI XML ERROR: file incomplete! Provide Parameters!"<<std::endl;
     return;
   }
   if(!found_scripts) {
-    std::cout<<"XML file incomplete! Provide MD scripts!"<<std::endl;
+    std::cout<<"\n\tPAFI XML ERROR: file incomplete! Provide MD scripts!"<<std::endl;
     return;
   }
 
-
-
-
+  for(auto ss : parameter_strings) {
+    bool found = bool(parameters.find(ss)!=parameters.end());
+    found += bool(configuration.find(ss)!=configuration.end());
+    if(!found) {
+      std::cout<<"\n\tPAFI XML ERROR: Undeclared parameter \""<<ss<<"\" in scripts!\n"<<std::endl;
+      return;
+    }
+  }
 
   xml_success = true;
 
   if(!test) set_parameters();
 
+};
+
+void Parser::extract_parameter_fields(std::string cstr, std::set<std::string> &matches) {
+  const std::regex param("(\%[^%]+\%)");
+  std::smatch rmatches;
+  if(std::regex_search(cstr,rmatches,param)) {
+    for (size_t i = 0; i < rmatches.size(); ++i) {
+      std::string s = rmatches[i].str();
+      s.pop_back();
+      s.erase(s.begin());
+      matches.insert(s);
+    }
+  }
 };
 
 void Parser::set_parameters() {
