@@ -10,9 +10,9 @@ If Temperature and ReactionCoordinate are not present an error will be raised
 The format is Min, Max, number of Steps
 -->
 <Parameters>
-  <Lambda>0.0 1.0 6</Lambda>
-  <ReactionCoordinate>0.0 0.5 2</ReactionCoordinate>
-  <Temperature>1. 1. 1</Temperature>
+  <Lambda>0.0 0.0 1</Lambda>
+  <ReactionCoordinate>0.0 1.0 7</ReactionCoordinate>
+  <Temperature>1. 5. 2</Temperature>
 </Parameters>
 
 

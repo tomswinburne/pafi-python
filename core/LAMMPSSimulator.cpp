@@ -404,7 +404,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   //run_script("PostAveRun");  // collate fixes and add to results
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
-  results["aveF"] = *lmp_ptr * norm_mag;
+  results["aveF"] = *lmp_ptr * norm_mag * -1.0;
   lammps_free(lmp_ptr);
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,1,0);
