@@ -337,7 +337,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   double r = params["ReactionCoordinate"];
   double T = params["Temperature"];
-  
+
 
   populate(r,norm_mag,0.0);
   run_script("PreRun");  // Stress Fixes
@@ -357,7 +357,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
     if(local_rank==0)
       std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
     #endif
-    cmd = "min_style fire\n minimize 0 0.01 ";
+    cmd = "min_style fire\n minimize 0 0.001 ";
     cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];
     run_commands(cmd);
   }
@@ -437,7 +437,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   lammps_free(lmp_ptr);
 
   // post minmization - max jump
-  cmd = "min_style fire\n minimize 0 0.01 ";
+  cmd = "min_style fire\n minimize 0 0.001 ";
   cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];
   run_commands(cmd);
   gather("x",3,dev);

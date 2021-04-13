@@ -1,20 +1,23 @@
 <!-- Which parameters to scan.
 If ReactionCoordinate and Temperature are not present an error will be raised
 The iteration sequence follows the order in this file,
+
 i.e. a python equivalent of this example would be
+
 for T in Temperature:
   for r in ReactionCoordinate:
-    # do simulation
+    for l in Lambda:
+      /* do simulation */
+
 If Temperature and ReactionCoordinate are not present an error will be raised
 
-The format is Min, Max, number of Steps
 -->
 <Parameters>
-  <Lambda>0. 1.0 5</Lambda>
-  <ReactionCoordinate>0.0 0.5 2</ReactionCoordinate>
-  <Temperature>1. 5. 2</Temperature>
+  <!-- Format is Min, Max, Number of steps -->
+  <Lambda>0. 0.0 1</Lambda>
+  <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
+  <Temperature>10. 50. 2</Temperature>
 </Parameters>
-
 
 <Setup>
 
@@ -34,23 +37,23 @@ The format is Min, Max, number of Steps
   <!--If FreshSeed==1, a new seed is set for each sampling run.
     With FreshSeed==0, a worker uses the same seed for all planes.
     This may reduce error in stochastic gradients... -->
-  <FreshSeed>1</FreshSeed>
+  <FreshSeed>0</FreshSeed>
 
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 1 </CoresPerWorker>
+  <CoresPerWorker> 2 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 20 </SampleSteps>
+  <SampleSteps> 100 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 10 </ThermSteps>
+  <ThermSteps> 100 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
-  <MinSteps> 100 </MinSteps>
+  <MinSteps> 10000 </MinSteps>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
@@ -148,7 +151,7 @@ The format is Min, Max, number of Steps
     run 0
   </Input>
 
-  <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
+  <!-- Apply any fixes before thermalization/sampling -->
   <PreRun>
     variable l1 equal 1.0-%Lambda%
     variable l2 equal 0.0+%Lambda%
@@ -158,14 +161,15 @@ The format is Min, Max, number of Steps
     run 0
     compute V_1 all pair eam/fs 1
     compute V_2 all pair eam/fs 2
-    variable dV_2 equal c_V_2-c_V_1
-    variable dV_1 equal c_V_1
+    variable V_1 equal (c_V_1/(0.000001+v_l1))
+    variable V_2 equal (c_V_2/(0.000001+v_l2))
+    variable dV equal v_V_2-v_V_1
   </PreRun>
 
   <!-- fixes only applied for sampling run.
     SEE "SampleFixes" TAG IN "Setup" -->
   <PreSample>
-    fix dV all ave/time 1 %SampleSteps% %SampleSteps% v_dV_2
+    fix dV all ave/time 1 %SampleSteps% %SampleSteps% v_dV
   </PreSample>
 
   <!-- Disable after sampling -->
@@ -181,4 +185,5 @@ The format is Min, Max, number of Steps
     unfix escale1
     unfix escale2
   </PostRun>
+
 </Scripts>

@@ -107,7 +107,7 @@ void run(MPI_Comm &world,std::string parser_file) {
 
   error_count=sim.error_count;
   total_error_count=0;
-  if(MPI_COMM_NULL != ensemble_comm) {}
+  if(MPI_COMM_NULL != ensemble_comm)
     MPI_Reduce(&error_count,&total_error_count,1,MPI_INT,MPI_SUM,0,ensemble_comm);
   MPI_Bcast(&total_error_count,1,MPI_INT,0,world);
   if(total_error_count>0) {
@@ -157,7 +157,7 @@ void run(MPI_Comm &world,std::string parser_file) {
 
       error_count=sim.error_count;
       total_error_count=0;
-      if(MPI_COMM_NULL != ensemble_comm) {}
+      if(MPI_COMM_NULL != ensemble_comm)
         MPI_Reduce(&error_count,&total_error_count,1,MPI_INT,MPI_SUM,0,ensemble_comm);
       MPI_Bcast(&total_error_count,1,MPI_INT,0,world);
       if(total_error_count>0) {
