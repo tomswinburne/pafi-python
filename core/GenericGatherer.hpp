@@ -204,6 +204,10 @@ virtual void next() {
 virtual void screen_output_header(bool end=true) {
   if(rank>0) return;
   std::cout<<"\nStarting T="<<params["Temperature"]<<"K run\n";
+  if(std::stoi(parser->configuration["OverDamped"])==1) {
+    std::cout<<"CAUTION : when OverDamped==1 Tpre/post are estimated from "
+    "equipartition. This will be less accurate at high temperature.\n\n";
+  }
   std::cout<<std::setw(35)<<"r";
   std::cout<<std::setw(field_width)<<"av(<Tpre>)";
   std::cout<<std::setw(field_width)<<"av(<Tpost>)";
