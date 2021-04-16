@@ -71,7 +71,7 @@ public:
 
   MPI_Comm *comm;
   Holder results;
-  double scale[3],refE,refT,refP, *x;
+  double scale[3],MinEnergy,refT,refP, *x;
   int natoms, tag, nknots, out_width, error_count;
   int local_rank, local_size, nlocal, offset;
   MinImage pbc;

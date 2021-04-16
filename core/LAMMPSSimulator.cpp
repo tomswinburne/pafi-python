@@ -337,6 +337,8 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   double r = params["ReactionCoordinate"];
   double T = params["Temperature"];
+  int overdamped = std::stoi(parser->configuration["OverDamped"]);
+
 
 
   populate(r,norm_mag,0.0);
@@ -363,8 +365,8 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   }
 
   // time average
-  refE = getEnergy();
-  results["MinEnergy"] = refE;
+  MinEnergy = getEnergy();
+  results["MinEnergy"] = MinEnergy;
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"hp",0,1,4,0);
   refP = *lmp_ptr;
@@ -372,36 +374,31 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+parser->configuration["ThermWindow"]+" ";
-  cmd += parser->configuration["ThermSteps"]+" c_pe\n";
-  cmd += "fix at all ave/time 1 "+parser->configuration["ThermWindow"]+" ";
-  cmd += parser->configuration["ThermSteps"]+" f_hp[5]\n";
+  cmd += parser->configuration["ThermSteps"]+" ";
+  if(overdamped==1) cmd += "c_pe\n";
+  else cmd += "c_thermo_temp\n";
   cmd += "run "+parser->configuration["ThermSteps"];
   run_commands(cmd);
 
   // pre temperature
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
-  sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
+  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/natoms/1.5/BOLTZ;
+  else sampleT = *lmp_ptr;
   lammps_free(lmp_ptr);
+
   results["preT"] = sampleT;
-
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
-  refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
-  lammps_free(lmp_ptr);
-
-
   run_commands("unfix ae\nrun 0");
-  run_commands("unfix at\nrun 0");
 
 
   // time averages for sampling TODO: groupname for ave/atom
   std::string SampleSteps = parser->configuration["SampleSteps"];
   cmd = "reset_timestep 0\n";
-  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" c_pe\n";
-  cmd += "fix at all ave/time 1 "+SampleSteps+" "+SampleSteps+" f_hp[5]\n";
-  if(!parser->postDump) {
+  cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
+  if(overdamped==1) cmd += "c_pe\n";
+  else cmd += "c_thermo_temp\n";
+  if(!parser->postDump)
     cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
-  }
-  //run_script("AveRun");  // average Fixes, requiring a time average
+
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
   cmd += " f_hp[1] f_hp[2] f_hp[3] f_hp[4]\n";
   run_commands(cmd);
@@ -410,14 +407,10 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   constrained_average();
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"ae",0,0,0,0);
-  sampleT = (*lmp_ptr-refE)/natoms/1.5/BOLTZ;
+  if(overdamped==1) sampleT = (*lmp_ptr-MinEnergy)/natoms/1.5/BOLTZ;
+  else sampleT = *lmp_ptr;
   lammps_free(lmp_ptr);
   results["postT"] = sampleT;
-
-  lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"at",0,0,0,0);
-  refT = ((*lmp_ptr) - refP) / natoms / BOLTZ / 3.0;
-  lammps_free(lmp_ptr);
-  //run_script("PostAveRun");  // collate fixes and add to results
 
   lmp_ptr = (double *) lammps_extract_fix(lmp,(char *)"af",0,1,0,0);
   results["aveF"] = *lmp_ptr * norm_mag * -1.0;
@@ -469,7 +462,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   } else results["MaxDev"] = sqrt(max_disp);
 
   // reset
-  run_commands("unfix ae\nunfix af\nunfix hp\nunfix at");
+  run_commands("unfix ae\nunfix af\nunfix hp");
 
   // Stress Fixes
   run_script("PostRun");
