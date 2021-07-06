@@ -25,7 +25,7 @@
 
 #ifndef SPLINE_H
 #define SPLINE_H
-
+#include <iostream>
 #include <cstdio>
 #include <cassert>
 #include <vector>
