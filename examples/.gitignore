@@ -1,2 +1,2 @@
 systems/*/*
-!systems/EAM-SIA-Fe.tar.gz
+!systems/*.tar.gz

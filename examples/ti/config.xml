@@ -23,7 +23,7 @@ If Temperature and ReactionCoordinate are not present an error will be raised
 
 
   <!-- MUST INCLUDE trailing forward slash -->
-  <DumpFolder>./dumps/</DumpFolder>
+  <DumpFolder>./output/</DumpFolder>
 
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
