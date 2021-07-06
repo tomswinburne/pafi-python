@@ -11,7 +11,6 @@
 #include <random>
 #include <tuple>
 #include <iterator>
-#include <regex>
 #include <set>
 
 
@@ -31,9 +30,9 @@ std::string welcome_message();
 
 void overwrite_xml(int nProcs);
 
-void extract_parameter_fields(std::string cstr,std::set<std::string> &matches);
-
 void set_parameters();
+
+void find_and_replace(std::string &s, std::string k, std::string v);
 
 void insert_params(std::string &s, Holder &params);
 

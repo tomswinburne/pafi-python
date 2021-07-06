@@ -59,7 +59,6 @@ Parser::Parser(std::string file, bool test) {
 
 
       while (child_node) {
-        extract_parameter_fields(child_node->value(),parameter_strings);
 
         if(rtws(child_node->name())=="PathwayConfigurations") {
           PathwayConfigurations = split_lines(child_node->value());
@@ -72,7 +71,6 @@ Parser::Parser(std::string file, bool test) {
       found_scan = true;
       child_node = root_node->first_node();
       while (child_node) {
-        extract_parameter_fields(child_node->value(),parameter_strings);
 
         std::vector<std::string> ss = split_line(child_node->value());
         if(ss.size()!=3)
@@ -86,8 +84,6 @@ Parser::Parser(std::string file, bool test) {
       found_scripts = true;
       child_node = root_node->first_node();
       while (child_node) {
-        extract_parameter_fields(child_node->value(),parameter_strings);
-
         scripts[rtws(child_node->name())] = child_node->value();
         child_node = child_node->next_sibling();
       }
@@ -123,19 +119,6 @@ Parser::Parser(std::string file, bool test) {
 
 };
 
-void Parser::extract_parameter_fields(std::string cstr, std::set<std::string> &matches) {
-  const std::regex param("(\%[^%]+\%)");
-  std::smatch rmatches;
-  if(std::regex_search(cstr,rmatches,param)) {
-    for (size_t i = 0; i < rmatches.size(); ++i) {
-      std::string s = rmatches[i].str();
-      s.pop_back();
-      s.erase(s.begin());
-      matches.insert(s);
-    }
-  }
-};
-
 void Parser::set_parameters() {
   // Now we can convert to type
   CoresPerWorker = std::stoi(configuration["CoresPerWorker"]);
@@ -159,18 +142,19 @@ void Parser::set_parameters() {
   write_dev = bool(std::stoi(configuration["WriteDev"]));
 };
 
+void Parser::find_and_replace(std::string &s, std::string k, std::string v) {
+  std::string key = "%"+k+"%";
+  while (s.find(p)!=std::string::npos)
+    s.replace(s.find(key),key.length(),v);
+};
+
 void Parser::insert_params(std::string &s, Holder &params) {
-  std::string s_r;
-  for(auto param : params) {
-    std::regex e ("%"+param.first+"%");
-    s_r = std::regex_replace(s,e,std::to_string(param.second));
-    s = s_r;
-  }
-  for(auto config : configuration) {
-    std::regex e ("%"+config.first+"%");
-    s_r = std::regex_replace(s,e,rtws(config.second));
-    s = s_r;
-  }
+
+  for(auto param : params)
+    find_and_replace(s,param.first,std::to_string(param.second));
+
+  for(auto config : configuration)
+    find_and_replace(s,config.first,rtws(config.second));
 };
 
 void Parser::overwrite_xml(int nProcs) {
