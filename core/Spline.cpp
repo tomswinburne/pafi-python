@@ -171,7 +171,13 @@ void spline::set_points(const std::vector<double>& x,
     int   n=x.size();
     // TODO: maybe sort x and y, rather than returning an error
     for(int i=0; i<n-1; i++) {
-        assert(m_x[i]<m_x[i+1]);
+      #ifdef VERBOSE
+      if(m_x[i]>m_x[i+1]) {
+        std::cout<<"BAD KNOTS? :"<<std::endl;
+        for(int j=0; j<n-1; j++) std::cout<<"r["<<j<<"] : "<<m_x[j]<<std::endl;
+      }
+      #endif
+      assert(m_x[i]<m_x[i+1]);
     }
 
     if(cubic_spline==true) { // cubic spline interpolation
