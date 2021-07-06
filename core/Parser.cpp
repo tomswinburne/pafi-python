@@ -144,7 +144,7 @@ void Parser::set_parameters() {
 
 void Parser::find_and_replace(std::string &s, std::string k, std::string v) {
   std::string key = "%"+k+"%";
-  while (s.find(p)!=std::string::npos)
+  while (s.find(key)!=std::string::npos)
     s.replace(s.find(key),key.length(),v);
 };
 
