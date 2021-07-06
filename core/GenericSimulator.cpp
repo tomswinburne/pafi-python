@@ -139,7 +139,7 @@ void GenericSimulator::make_path(std::vector<std::string> knot_list) {
   r[nknots-1] = 1.0;
 
   for(int knot=0;knot<nknots;knot++) {
-    //r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
+    r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
     pathway_r.push_back(r[knot]);
   }
 
