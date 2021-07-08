@@ -148,17 +148,17 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
 
 
 
-    spline Fspl;
-    Fspl.set_points(sample_r,dF);
+    spline dFspl;
+    dFspl.set_points(sample_r,dF);
 
     double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
     double dr = diff_r / sample_r.size() / 10.0;
     double F_bar = 0., E_bar=0., f=0.;
     for(auto e: dE) E_bar = std::max(E_bar,e-dE[0]);
     for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
-      f -= dr/2.0 * Fspl(r);
+      f += dr/2.0 * dFspl(r);
       F_bar = std::max(F_bar,f);
-      f -= dr/2.0 * Fspl(r);
+      f += dr/2.0 * dFspl(r);
     }
     std::cout<<"\n\n******************************************************************\n\n";
     std::cout<<"\tEnergy Barrier ~= "<<E_bar<<"eV, Force Integration Barrier ~= "<<F_bar<<" eV\n";
