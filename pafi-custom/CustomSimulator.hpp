@@ -38,7 +38,6 @@ public:
 
     double *lmp_ptr;
     auto v = parser->split_line(parser->configuration["SampleFixes"]);
-
     int nfixes = v.size()/2;
     LAMMPSSimulator::run_script("PreSample");
     std::string cmd = "run "+parser->configuration["SampleSteps"];
@@ -63,7 +62,7 @@ public:
           lammps_free(lmp_ptr);
         }
       }
-      
+
     }
     LAMMPSSimulator::run_script("PostSample");
   };

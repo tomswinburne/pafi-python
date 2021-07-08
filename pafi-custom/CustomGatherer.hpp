@@ -28,6 +28,8 @@ public:
     GenericGatherer::screen_output_header(false);
     if(rank>0) return; // only print for rank==0
     std::cout<<std::setw(field_width)<<"Lambda"<<std::endl;
+    std::cout<<std::setw(field_width)<<"av(dV)"<<std::endl;
+
   };
 
   void screen_output_line(bool end=true) {
@@ -43,7 +45,8 @@ public:
      */
     GenericGatherer::screen_output_line(false);
     if(rank>0) return; // only print for rank==0
-    std::cout<<std::setw(field_width)<<params["Lambda"]<<std::endl;
+    std::cout<<std::setw(field_width)<<params["Lambda"];
+    std::cout<<std::setw(field_width)<<ens_results["f_dV"]<<std::endl;
   };
 };
 
