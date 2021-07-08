@@ -96,7 +96,7 @@ void LAMMPSSimulator::fill_lammps_vectors() {
   if(x==NULL) x = new double[3*natoms]; // mainly for declaration
   if(lt==NULL) lt = new double[natoms];
 
-  gather("x",1,x);
+  gather("x",3,x);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered x"<<std::endl;
   #endif
