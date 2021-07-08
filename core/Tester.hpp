@@ -159,6 +159,7 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
       f += dr/2.0 * dFspl(r);
       F_bar = std::max(F_bar,f);
       f += dr/2.0 * dFspl(r);
+      std::cout<<r<<" "<<f<<std::endl;
     }
     std::cout<<"\n\n******************************************************************\n\n";
     std::cout<<"\tEnergy Barrier ~= "<<E_bar<<"eV, Force Integration Barrier ~= "<<F_bar<<" eV\n";
