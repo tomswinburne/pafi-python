@@ -116,6 +116,7 @@ If Temperature and ReactionCoordinate are not present an error will be raised
   Loaded via LAMMPS read_data (see Scripts/Input below)
   -->
   <PathwayConfigurations>
+    ../systems/EAM-SNAP-VAC-W/image_0.dat
     ../systems/EAM-SNAP-VAC-W/image_1.dat
     ../systems/EAM-SNAP-VAC-W/image_2.dat
     ../systems/EAM-SNAP-VAC-W/image_3.dat
@@ -124,7 +125,6 @@ If Temperature and ReactionCoordinate are not present an error will be raised
     ../systems/EAM-SNAP-VAC-W/image_6.dat
     ../systems/EAM-SNAP-VAC-W/image_7.dat
     ../systems/EAM-SNAP-VAC-W/image_8.dat
-    ../systems/EAM-SNAP-VAC-W/image_9.dat
   </PathwayConfigurations>
 
   <!--
@@ -144,7 +144,7 @@ If Temperature and ReactionCoordinate are not present an error will be raised
     atom_style atomic
     atom_modify map array sort 0 0.0
     neigh_modify every 2 delay 10 check yes page 1000000 one 100000
-    read_data  ../systems/EAM-SNAP-VAC-W/image_1.dat
+    read_data  ../systems/EAM-SNAP-VAC-W/image_0.dat
     pair_style    hybrid/overlay eam/fs snap
     pair_coeff * * eam/fs ../systems/EAM-SNAP-VAC-W/W.eam.fs W
     pair_coeff * * snap ../systems/EAM-SNAP-VAC-W/W.snapcoeff ../systems/EAM-SNAP-VAC-W/W.snapparams W
