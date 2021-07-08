@@ -16,6 +16,8 @@ GenericSimulator::GenericSimulator(MPI_Comm &instance_comm, Parser &p, Holder &h
   nlocal = 0;
   offset = 0;
 
+  x = NULL;
+
 };
 
 void GenericSimulator::write(std::string fn, double r) {

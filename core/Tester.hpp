@@ -154,6 +154,7 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
     double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
     double dr = diff_r / sample_r.size() / 10.0;
     double F_bar = 0., E_bar=0., f=0.;
+
     for(auto e: dE) E_bar = std::max(E_bar,e-dE[0]);
     for(double r=sample_r[0];r<=sample_r[0]+diff_r;r+=dr) {
       f += dr/2.0 * dFspl(r);
@@ -164,9 +165,7 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
     std::cout<<"\n\n******************************************************************\n\n";
     std::cout<<"\tEnergy Barrier ~= "<<E_bar<<"eV, Force Integration Barrier ~= "<<F_bar<<" eV\n";
     std::cout<<"\tONLY SIMPLE TESTS PERFORMED HERE!\n"
-    "\tPLEASE USE pafi-path-test TO TEST PATHWAY FOR FORCE INTEGRATION\n"
     "\n******************************************************************\n\n"<<std::endl;
-
   }
 
   // close down LAMMPS instances
