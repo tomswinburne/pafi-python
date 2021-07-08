@@ -143,9 +143,14 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
       dF.push_back(res["aveF"].first);
       dE.push_back(res["MinEnergy"].first);
       maxjumpr.push_back(res["MaxJump"].first);
+      std::cout<<"r: "<<*std::prev(sample_r.end())<<", dF: "<<*std::prev(dF.end())<<std::endl;
     }
+
+
+
     spline Fspl;
     Fspl.set_points(sample_r,dF);
+
     double diff_r = sample_r[sample_r.size()-1] - sample_r[0];
     double dr = diff_r / sample_r.size() / 10.0;
     double F_bar = 0., E_bar=0., f=0.;
