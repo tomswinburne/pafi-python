@@ -94,12 +94,12 @@ void LAMMPSSimulator::fill_lammps_vectors() {
   #endif
 
   if(x==NULL) x = new double[3*natoms]; // mainly for declaration
-  if(lt==NULL) lt = new double[natoms];
-
   gather("x",3,x);
   #ifdef VERBOSE
   if(local_rank==0) std::cout<<"LAMMPSSimulator(): gathered x"<<std::endl;
   #endif
+
+  if(lt==NULL) lt = new double[natoms];
 
   if(!has_pafi and local_rank==0) {
     std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;

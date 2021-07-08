@@ -175,7 +175,7 @@ virtual int collate(int *valid) {
 virtual void next() {
 
   screen_output_line();
-
+  bool end_of_temperature_cycle = false;
   for(auto &s : sweep_order) {
     s.second++;
     if(s.second % sample_axes[s.first].size() == 0) {
@@ -189,12 +189,13 @@ virtual void next() {
       }
 
     } else {
-      if(s.first=="Temperature" ) screen_output_header();
+      if(s.first=="Temperature" ) end_of_temperature_cycle = true;
       break;
     }
 
   }
   set_params();
+  if(end_of_temperature_cycle) screen_output_header();
   // wipe ens_data if master node
   if(rank==0) {
     for(int j=0;j<2*dsize+1;j++) ens_data[j] = 0.0;
