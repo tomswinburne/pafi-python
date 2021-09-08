@@ -16,6 +16,8 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, Holder &h,
 
   lmp = new LAMMPS(5,lmparg,*comm);
 
+  // check version number and existence of fix-pafi and quit if otherwise
+  if(!check_lammps_compatibility()) return;
 
   // reset the system
   reset();
@@ -32,6 +34,36 @@ LAMMPSSimulator::LAMMPSSimulator (MPI_Comm &instance_comm, Parser &p, Holder &h,
 
   // these won't change size even if we rereun "input"
   fill_lammps_vectors();
+
+  simulator_name = "LAMMPSSimulator";
+
+};
+
+bool LAMMPSSimulator::check_lammps_compatibility() {
+  // check version number and existence of fix-pafi
+  int lammps_release_int = lammps_version(lmp); // YYYYMMDD
+
+  std::string package_name = "USER-MISC";
+
+  if(lammps_release_int<20201101) {
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator(): Require version > 28July2020!"<<std::endl;
+    return false;
+  }
+  if(lammps_release_int>=20210728) package_name = "EXTRA-FIX";
+
+  #ifdef VERBOSE
+  if(local_rank==0)
+    std::cout<<"LAMMPSSimulator(): Searching for "<<package_name<<std::endl;
+  #endif
+
+  has_pafi = (bool)lammps_config_has_package(package_name.c_str());
+  #ifdef VERBOSE
+  if(local_rank==0)
+    std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
+  #endif
+
+  return has_pafi;
 
 };
 
@@ -62,12 +94,6 @@ void LAMMPSSimulator::fill_lammps_vectors() {
   */
   nlocal = 3*natoms;
   offset = 0;
-
-  has_pafi = (bool)lammps_config_has_package((char *)"USER-MISC");
-  #ifdef VERBOSE
-  if(local_rank==0)
-    std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
-  #endif
 
   if(id==NULL) id = new int[natoms];
   gather("id",1,id);
@@ -335,15 +361,36 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   std::string cmd;
   double norm_mag, sampleT, dm;
   double *lmp_ptr;
-
+  if(params.find("ReactionCoordinate")==params.end()) {
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator: No ReactionCoordinate! Exiting!"<<std::endl;
+    return;
+  }
   double r = params["ReactionCoordinate"];
+  if(params.find("Temperature")==params.end()) {
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator: No Temperature! Exiting!"<<std::endl;
+    return;
+  }
   double T = params["Temperature"];
-  int overdamped = std::stoi(parser->configuration["OverDamped"]);
 
+  int overdamped = 0;
+  if(parser->configuration.find("OverDamped")==parser->configuration.end()) {
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator: No OverDamped! Defaulting to 0"<<std::endl;
+    parser->configuration["OverDamped"] = std::to_string(0);
+  }
+  overdamped = std::stoi(parser->configuration["OverDamped"]);
+
+  int fix_order = 0;
+  if(parser->configuration.find("FixOrder")==parser->configuration.end()) {
+    if(local_rank==0)
+      std::cout<<"LAMMPSSimulator: No FixOrder! Defaulting to 0"<<std::endl;
+  } else fix_order = std::stoi(parser->configuration["FixOrder"]);
 
 
   populate(r,norm_mag,0.0);
-  run_script("PreRun");  // Stress Fixes
+  if(fix_order==0) run_script("PreRun");  // Stress Fixes
   populate(r,norm_mag,T);
 
   // pafi fix
@@ -355,10 +402,12 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   cmd += parser->configuration["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
 
+  if(fix_order==1) run_script("PreRun");  // Stress Fixes
+
   if(parser->preMin) {
     #ifdef VERBOSE
     if(local_rank==0)
-      std::cout<<"LAMMPSSimulator.populate(): minimizing"<<std::endl;
+      std::cout<<"LAMMPSSimulator.sample(): minimizing"<<std::endl;
     #endif
     cmd = "min_style fire\n minimize 0 0.001 ";
     cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];

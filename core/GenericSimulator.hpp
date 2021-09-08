@@ -57,7 +57,7 @@ public:
 
   void write_dev(std::string fn, double r, double *dev);
 
-  void make_path(std::vector<std::string> knot_list);
+  void make_path(std::vector<std::string> knot_list, bool real_coord);
 
   double path(int i, double r, int d, double s);
 
@@ -80,7 +80,7 @@ public:
   std::vector<spline> pathway, splines;
   std::vector<double> pathway_r;
   bool s_flag,has_pafi,spline_path;
-  std::string last_error_message;
+  std::string last_error_message, simulator_name;
 private:
   /* nothing */
 };

@@ -10,8 +10,8 @@ If Temperature and ReactionCoordinate are not present an error will be raised
 The format is Min, Max, number of Steps
 -->
 <Parameters>
-  <Lambda>0.0 1.0 2</Lambda>
-  <ReactionCoordinate>0.0 1.0 3</ReactionCoordinate>
+  <!--<Lambda>1.0 1.0 1</Lambda>-->
+  <ReactionCoordinate>0.0 1.0 7</ReactionCoordinate>
   <Temperature>50. 100. 2</Temperature>
 </Parameters>
 
@@ -98,6 +98,9 @@ The format is Min, Max, number of Steps
   sample only at provided pathway configurations. Test feature -->
   <Rediscretize>1</Rediscretize>
 
+  <!-- Use geometric distance for MEP coordinate (Default: 1) -->
+  <RealMEPDist>1</RealMEPDist>
+
   <!-- Maximum Atomic Displacement between local in-plane minima
   before and after sampling run which can still be considered "in basin"
   Check for shallow metastability on hyperplane
@@ -160,7 +163,7 @@ The format is Min, Max, number of Steps
   </PreSample>
 
   <PostSample>
-    unfix ab
+    unfix sna_vector
   </PostSample>
 
   <!-- Turn off these same fixes after each sampling run -->

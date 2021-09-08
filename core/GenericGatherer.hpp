@@ -129,7 +129,6 @@ virtual int collate(int *valid) {
   int total_valid=0,i,j;
 
   // raw output
-
   for(i=0;i<nWorkers;i++) {
     for(auto par: params) raw<<par.second<<",";
     raw<<i;
@@ -176,6 +175,7 @@ virtual void next() {
 
   screen_output_line();
   bool end_of_temperature_cycle = false;
+
   for(auto &s : sweep_order) {
     s.second++;
     if(s.second % sample_axes[s.first].size() == 0) {

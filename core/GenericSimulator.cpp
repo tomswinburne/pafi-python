@@ -18,6 +18,8 @@ GenericSimulator::GenericSimulator(MPI_Comm &instance_comm, Parser &p, Holder &h
 
   x = NULL;
 
+  simulator_name = "GenericSimulator";
+
 };
 
 void GenericSimulator::write(std::string fn, double r) {
@@ -85,7 +87,7 @@ void GenericSimulator::expansion(double T, double *newscale) {
   //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
 };
 
-void GenericSimulator::make_path(std::vector<std::string> knot_list) {
+void GenericSimulator::make_path(std::vector<std::string> knot_list, bool real_coord) {
   /*
     TODO: parallel i/o and splining
     Only really a problem with memory limitations, say 2GB / core.
@@ -124,27 +126,32 @@ void GenericSimulator::make_path(std::vector<std::string> knot_list) {
       knots[i+knot*nlocal] = x[i+offset]+knots[i];
   }
 
-  for(int knot=0;knot<nknots;knot++) {
-    r[knot] = 0.;
-    rr[knot] = 0.;
-    for(int i=0;i<nlocal;i++) {
-      dx = knots[i+knot*nlocal]-knots[i];
-      r[knot] += dx*dx;
-      dx = knots[i+knot*nlocal]-knots[i+(nknots-1)*nlocal];
-      rr[knot] += dx*dx;
+  if(real_coord) {
+    for(int knot=0;knot<nknots;knot++) {
+      r[knot] = 0.;
+      rr[knot] = 0.;
+      for(int i=0;i<3*natoms;i++) {
+        dx = knots[i+knot*3*natoms]-knots[i];
+        r[knot] += dx*dx;
+        dx = knots[i+knot*3*natoms]-knots[i+(nknots-1)*3*natoms];
+        rr[knot] += dx*dx;
+      }
+    }
+    for(int knot=0;knot<nknots-1;knot++) r[knot] = sqrt(r[knot]/r[nknots-1]);
+    for(int knot=1;knot<nknots;knot++) rr[knot] = sqrt(rr[knot]/rr[0]);
+    rr[0] = 1.0;
+    r[nknots-1] = 1.0;
+
+    for(int knot=0;knot<nknots;knot++) {
+      pathway_r.push_back(0.5*(r[knot] + 1.0 - rr[knot]));
+      r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
+    }
+  } else {
+    for(int knot=0;knot<nknots;knot++) {
+      r[knot] = 1.0*float(knot)/float(nknots-1);
+      pathway_r.push_back(r[knot]);
     }
   }
-
-  for(int knot=0;knot<nknots-1;knot++) r[knot] = sqrt(r[knot]/r[nknots-1]);
-  for(int knot=1;knot<nknots;knot++) rr[knot] = sqrt(rr[knot]/rr[0]);
-  rr[0] = 1.0;
-  r[nknots-1] = 1.0;
-
-  for(int knot=0;knot<nknots;knot++) {
-    r[knot] = 0.5*(r[knot] + 1.0 - rr[knot]);
-    pathway_r.push_back(r[knot]);
-  }
-
 
   for(int i=0; i<nlocal; i++) {
     for(int knot=0;knot<nknots;knot++) xs[knot] = knots[nlocal*knot + i];

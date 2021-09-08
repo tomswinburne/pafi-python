@@ -35,10 +35,16 @@ public:
       9: preT : equipartition temperature before sample run
       10: stdF : Time variance of PAFI free energy gradient
     */
+    if (parser->configuration.find("SampleFixes")==parser->configuration.end()) {
+      std::string cmd = "run "+parser->configuration["SampleSteps"];
+      LAMMPSSimulator::run_commands(cmd);
+      return;
+    }
 
     double *lmp_ptr;
     auto v = parser->split_line(parser->configuration["SampleFixes"]);
     int nfixes = v.size()/2;
+
     LAMMPSSimulator::run_script("PreSample");
     std::string cmd = "run "+parser->configuration["SampleSteps"];
     LAMMPSSimulator::run_commands(cmd);

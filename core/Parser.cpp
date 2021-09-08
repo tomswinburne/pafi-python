@@ -23,6 +23,8 @@ Parser::Parser(std::string file, bool test) {
   configuration["PreMin"] = "1";
   configuration["SplinePath"] = "1";
   configuration["MatchPlanes"] = "0";
+  configuration["RealMEPDist"] = "1";
+  configuration["FixOrder"] = "0";
   configuration["GlobalSeed"] = "137";
   configuration["FreshSeed"] = "1";
   // these could be overwritten during TI, or set to the lambda=1 value
@@ -137,6 +139,7 @@ void Parser::set_parameters() {
   preMin = bool(std::stoi(configuration["PreMin"]));
   spline_path = bool(std::stoi(configuration["SplinePath"]));
   match_planes = !bool(std::stoi(configuration["Rediscretize"]));
+  real_coord = bool(std::stoi(configuration["RealMEPDist"]));
   globalSeed = std::stoi(configuration["GlobalSeed"]);
   reseed = bool(std::stoi(configuration["FreshSeed"]));
   write_dev = bool(std::stoi(configuration["WriteDev"]));

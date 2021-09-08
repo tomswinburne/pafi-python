@@ -19,7 +19,7 @@ The format is Min, Max, number of Steps
 
 <Setup>
   <!-- MUST include trailing forward slash -->
-  <DumpFolder>./</DumpFolder>
+  <DumpFolder>./dumps/</DumpFolder>
 
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
@@ -94,6 +94,9 @@ The format is Min, Max, number of Steps
   <!-- If == 0 ignore ReactionCoordinate parameter,
   sample only at provided pathway configurations. Test feature -->
   <Rediscretize>1</Rediscretize>
+
+  <!-- Use geometric distance for MEP coordinate (Default: 1) -->
+  <RealMEPDist>1</RealMEPDist>
 
   <!-- Maximum Atomic Displacement between local in-plane minima
   before and after sampling run which can still be considered "in basin"

@@ -73,7 +73,7 @@ void run(MPI_Comm &world,std::string parser_file) {
   int local_rank = rank % parser.CoresPerWorker;
   int min_valid = int(parser.redo_thresh*nWorkers*parser.nRepeats);
 
-  // LAMMPS communicators
+  // MPI communicators
   MPI_Comm instance_comm;
   MPI_Group world_group, ensemble_group;
   MPI_Comm ensemble_comm;
@@ -103,7 +103,7 @@ void run(MPI_Comm &world,std::string parser_file) {
   if(!sim.has_pafi) exit(-1);
   if(rank==0)  std::cout<<parser.welcome_message();
 
-  sim.make_path(parser.PathwayConfigurations);
+  sim.make_path(parser.PathwayConfigurations,parser.real_coord);
 
   error_count=sim.error_count;
   total_error_count=0;
@@ -113,7 +113,8 @@ void run(MPI_Comm &world,std::string parser_file) {
   if(total_error_count>0) {
     if(rank==0) {
       std::cout<<"\n\n\n*****************************\n\n\n";
-      std::cout<<"LAMMPS errors whilst loading pathway! Exiting!";
+      std::cout<<sim.simulator_name;
+      std::cout<<" errors whilst loading pathway! Exiting!";
       std::cout<<"\n\n\n*****************************\n\n\n";
     }
     exit(-1);
@@ -163,7 +164,8 @@ void run(MPI_Comm &world,std::string parser_file) {
       if(total_error_count>0) {
         if(rank==0) {
           std::cout<<"\n\n\n*****************************\n\n\n";
-          std::cout<<"LAMMPS errors during sampling! Exiting!";
+          std::cout<<sim.simulator_name;
+          std::cout<<" errors during sampling! Exiting!";
           std::cout<<"\n\n\n*****************************\n\n\n";
         }
         exit(-1);
@@ -207,7 +209,7 @@ void run(MPI_Comm &world,std::string parser_file) {
   }
   if(rank==0) g.close();
 
-  // close down LAMMPS instances
+  // close down simulator instances
   sim.close();
 
   MPI_Barrier(world);

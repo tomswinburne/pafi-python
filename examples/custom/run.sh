@@ -4,7 +4,7 @@
 
 touch pafi
 rm pafi
-ln -s ../../build/pafi pafi
+ln -s ../../build/pafi-custom pafi
 
 mkdir -p dumps
 

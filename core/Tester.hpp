@@ -82,7 +82,7 @@ void test(MPI_Comm &world,std::string parser_file,bool lammps_prep) {
   if(!sim.has_pafi) exit(-1);
   if(rank==0)  std::cout<<parser.welcome_message();
 
-  sim.make_path(parser.PathwayConfigurations);
+  sim.make_path(parser.PathwayConfigurations,parser.real_coord);
   if(rank==0) std::cout<<"\n\nPath Loaded\n\n";
   g.special_r_overwrite(sim.pathway_r);
 

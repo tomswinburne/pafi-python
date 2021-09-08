@@ -98,6 +98,9 @@ If Temperature and ReactionCoordinate are not present an error will be raised
   sample only at provided pathway configurations. Test feature -->
   <Rediscretize>1</Rediscretize>
 
+  <!-- Use geometric distance for MEP coordinate (Default: 1) -->
+  <RealMEPDist>1</RealMEPDist>
+
   <!-- Maximum Atomic Displacement between local in-plane minima
   before and after sampling run which can still be considered "in basin"
   Check for shallow metastability on hyperplane
