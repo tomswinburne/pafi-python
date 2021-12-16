@@ -24,7 +24,6 @@ Parser::Parser(std::string file, bool test) {
   configuration["SplinePath"] = "1";
   configuration["MatchPlanes"] = "0";
   configuration["RealMEPDist"] = "1";
-  configuration["FixOrder"] = "0";
   configuration["GlobalSeed"] = "137";
   configuration["FreshSeed"] = "1";
   // these could be overwritten during TI, or set to the lambda=1 value

@@ -43,21 +43,21 @@ bool LAMMPSSimulator::check_lammps_compatibility() {
   // check version number and existence of fix-pafi
   int lammps_release_int = lammps_version(lmp); // YYYYMMDD
 
-  std::string package_name = "USER-MISC";
+  pafi_package = "USER-MISC";
 
   if(lammps_release_int<20201101) {
     if(local_rank==0)
       std::cout<<"LAMMPSSimulator(): Require version > 28July2020!"<<std::endl;
     return false;
   }
-  if(lammps_release_int>=20210728) package_name = "EXTRA-FIX";
+  if(lammps_release_int>=20210728) pafi_package = "EXTRA-FIX";
 
   #ifdef VERBOSE
   if(local_rank==0)
-    std::cout<<"LAMMPSSimulator(): Searching for "<<package_name<<std::endl;
+    std::cout<<"LAMMPSSimulator(): Searching for "<<pafi_package<<std::endl;
   #endif
 
-  has_pafi = (bool)lammps_config_has_package(package_name.c_str());
+  has_pafi = (bool)lammps_config_has_package((char *) pafi_package.c_str());
   #ifdef VERBOSE
   if(local_rank==0)
     std::cout<<"LAMMPSSimulator(): has_pafi: "<<has_pafi<<std::endl;
@@ -128,7 +128,7 @@ void LAMMPSSimulator::fill_lammps_vectors() {
   if(lt==NULL) lt = new double[natoms];
 
   if(!has_pafi and local_rank==0) {
-    std::cout<<"PAFI Error: missing USER-MISC package in LAMMPS"<<std::endl;
+    std::cout<<"PAFI Error: missing "<<pafi_package<<" package in LAMMPS"<<std::endl;
     if(error_count>0) std::cout<<last_error()<<std::endl;
   }
 };
@@ -382,27 +382,18 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   }
   overdamped = std::stoi(parser->configuration["OverDamped"]);
 
-  int fix_order = 0;
-  if(parser->configuration.find("FixOrder")==parser->configuration.end()) {
-    if(local_rank==0)
-      std::cout<<"LAMMPSSimulator: No FixOrder! Defaulting to 0"<<std::endl;
-  } else fix_order = std::stoi(parser->configuration["FixOrder"]);
-
 
   populate(r,norm_mag,0.0);
-  if(fix_order==0) run_script("PreRun");  // Stress Fixes
+  run_script("PreRun");
   populate(r,norm_mag,T);
 
   // pafi fix
-  cmd = "run 0\n"; // to ensure the PreRun script is executed
   parser->configuration["Temperature"] = std::to_string(T);
   cmd += "fix hp all pafi __pafipath "+parser->configuration["Temperature"]+" ";
   cmd += parser->configuration["Friction"]+" ";
   cmd += parser->seed_str()+" overdamped ";
   cmd += parser->configuration["OverDamped"]+" com 1\nrun 0";
   run_commands(cmd);
-
-  if(fix_order==1) run_script("PreRun");  // Stress Fixes
 
   if(parser->preMin) {
     #ifdef VERBOSE
@@ -413,6 +404,8 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
     cmd += parser->configuration["MinSteps"]+" "+parser->configuration["MinSteps"];
     run_commands(cmd);
   }
+
+  run_script("PreTherm");
 
   // time average
   MinEnergy = getEnergy();

@@ -80,7 +80,7 @@ public:
   std::vector<spline> pathway, splines;
   std::vector<double> pathway_r;
   bool s_flag,has_pafi,spline_path;
-  std::string last_error_message, simulator_name;
+  std::string last_error_message, simulator_name, pafi_package;
 private:
   /* nothing */
 };

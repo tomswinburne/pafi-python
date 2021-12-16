@@ -11,19 +11,14 @@ The format is Min, Max, number of Steps
 -->
 <Parameters>
   <!--<Lambda>1.0 1.0 1</Lambda>-->
-  <ReactionCoordinate>0.0 1.0 7</ReactionCoordinate>
-  <Temperature>50. 100. 2</Temperature>
+  <ReactionCoordinate>0.0 0.5 2</ReactionCoordinate>
+  <Temperature>50. 50. 1</Temperature>
 </Parameters>
 
 
 <Setup>
   <!-- MUST INCLUDE trailing forward slash -->
   <DumpFolder>./dumps/</DumpFolder>
-  <!--
-  list names of global fixes extracted during sampling- name, size
-  these should be relfected in <Pre/PostSample>
-  -->
-  <SampleFixes>sna_vector 30</SampleFixes>
 
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
@@ -130,6 +125,12 @@ The format is Min, Max, number of Steps
     ../systems/EAM-SIA-Fe/image_9.dat
   </PathwayConfigurations>
 
+  <!--
+  list names of global fixes extracted during sampling- name, size
+  these should be relfected in <Pre/PostSample>
+  -->
+  <SampleFixes>sna_vector 30</SampleFixes>
+
 </Setup>
 
 <Scripts>
@@ -147,14 +148,18 @@ The format is Min, Max, number of Steps
     run 0
     thermo 10
     run 0
-
   </Input>
 
   <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
   <PreRun>
     compute b all sna/atom 4.7 0.99363 6 0.5 1.0
+    compute bd all snav/atom 4.7 0.99363 6 0.5 1.0
     compute tb all reduce ave c_b[*]
   </PreRun>
+
+  <PreTherm>
+    compute dx all displace/atom
+  </PreTherm>
 
   <!-- fixes only applied for sampling run. these can be extracted using the
   SampleFixes tag in Configuration -->
