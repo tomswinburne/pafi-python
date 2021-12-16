@@ -104,7 +104,7 @@ The format is Min, Max, number of Steps
 
   <!-- Resample a batch if less than this proportion are "in-basin" -->
   <ReSampleThresh> 0.8 </ReSampleThresh>
-
+  
   <!-- How many resample attempts -->
   <maxExtraRepeats> 1 </maxExtraRepeats>
 
@@ -125,12 +125,6 @@ The format is Min, Max, number of Steps
     ../systems/EAM-SIA-Fe/image_9.dat
   </PathwayConfigurations>
 
-  <!--
-  list names of global fixes extracted during sampling- name, size
-  these should be relfected in <Pre/PostSample>
-  -->
-  <SampleFixes>sna_vector 30</SampleFixes>
-
 </Setup>
 
 <Scripts>
@@ -150,6 +144,18 @@ The format is Min, Max, number of Steps
     run 0
   </Input>
 
+</Scripts>
+
+
+<Setup>
+  <!--
+  list names of global fixes extracted during sampling- name, size
+  these should be relfected in <Pre/PostSample>
+  -->
+  <SampleFixes>sna_vector 30</SampleFixes>
+</Setup>
+
+<Scripts>
   <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
   <PreRun>
     compute b all sna/atom 4.7 0.99363 6 0.5 1.0

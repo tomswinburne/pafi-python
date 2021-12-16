@@ -130,12 +130,6 @@ If Temperature and ReactionCoordinate are not present an error will be raised
     ../systems/EAM-SIA-Fe/image_9.dat
   </PathwayConfigurations>
 
-  <!--
-  list names of global fixes extracted during sampling- name, size
-  these should be relfected in <Pre/PostSample>
-  -->
-  <SampleFixes>dV 1</SampleFixes>
-
 </Setup>
 
 <Scripts>
@@ -153,7 +147,17 @@ If Temperature and ReactionCoordinate are not present an error will be raised
     pair_coeff * * eam/fs 2 Fe_mm.eam.fs Fe
     run 0
   </Input>
+</Scripts>
 
+<Setup>
+  <!--
+  list names of global fixes extracted during sampling- name, size
+  these should be relfected in <Pre/PostSample>
+  -->
+  <SampleFixes>dV 1</SampleFixes>
+</Setup>
+
+<Scripts>
   <!-- Apply any fixes before thermalization/sampling -->
   <PreRun>
     variable l1 equal 1.0-%Lambda%
