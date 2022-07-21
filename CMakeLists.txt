@@ -3,11 +3,16 @@ cmake_minimum_required(VERSION 3.5)
 
 set(DEBUG 0)
 
+
+
+
 set(PREFIX "$ENV{PREFIX}") # example value
-set(CMAKE_CXX_COMPILER /usr/local/bin/mpicxx) # example value
-set(CMAKE_C_COMPILER /usr/local/bin/mpicc) # example value
+set(CMAKE_CXX_COMPILER mpicxx) # example value
+set(CMAKE_C_COMPILER mpicc) # example value
 set(CMAKE_INCLUDE_PATH ${PREFIX}/include) # location of copied lammps header directory (lammps/*.h)
 set(CMAKE_LIBRARY_PATH ${PREFIX}/lib) # location of liblammps_mpi.a
+
+
 
 
 enable_testing()
@@ -47,7 +52,7 @@ add_executable(pafi ${src_files} pafi-standard/pafi.cpp)
 add_executable(pafi-lammps-preparation ${src_files} pafi-standard/pafi-lammps-preparation.cpp)
 add_executable(pafi-path-test ${src_files} pafi-standard/pafi-path-test.cpp)
 
-target_link_libraries(pafi lammps_mpi)
+target_link_libraries(pafi lammps)
 target_link_libraries(pafi-lammps-preparation lammps_mpi)
 target_link_libraries(pafi-path-test lammps_mpi)
 
