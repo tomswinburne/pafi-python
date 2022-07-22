@@ -61,7 +61,7 @@ public:
 
   virtual std::string header(double mass);
 
-  virtual void lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq);
+  virtual void lammps_write_dev(std::string fn, double r, double *dev);
   virtual void lammps_dump_path(std::string fn, double r);
 
   virtual double getEnergy();

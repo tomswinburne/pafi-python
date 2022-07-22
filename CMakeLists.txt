@@ -53,9 +53,9 @@ add_executable(pafi-lammps-preparation ${src_files} pafi-standard/pafi-lammps-pr
 add_executable(pafi-path-test ${src_files} pafi-standard/pafi-path-test.cpp)
 
 target_link_libraries(pafi lammps)
-target_link_libraries(pafi-lammps-preparation lammps_mpi)
-target_link_libraries(pafi-path-test lammps_mpi)
+target_link_libraries(pafi-lammps-preparation lammps)
+target_link_libraries(pafi-path-test lammps)
 
 # custom pafi example
 add_executable(pafi-custom ${src_files} pafi-custom/pafi.cpp)
-target_link_libraries(pafi-custom lammps_mpi)
+target_link_libraries(pafi-custom lammps)

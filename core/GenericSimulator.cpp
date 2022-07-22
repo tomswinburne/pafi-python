@@ -52,12 +52,11 @@ void GenericSimulator::write(std::string fn, double r) {
 void GenericSimulator::write_dev(std::string fn, double r, double *dev) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
-  out<<"# PAFI DUMP FILE. Reference path u(r) is a Nx3 vector.\n";
-  out<<"# For i=0,1,2: u_i(r) , mean(x_i-u_i|r) across valid ensemble\n";
+  out<<"id,x,y,z,dx,dy,dz\n";
   for(int i=0;i<natoms;i++) {
-    out<<i+1<<" ";
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)<<" ";
-    for(int j=0;j<3;j++) out<<dev[3*i+j]<<" ";
+    out<<i+1;
+    for(int j=0;j<3;j++) out<<","<<pathway[3*i+j](r);
+    for(int j=0;j<3;j++) out<<","<<dev[3*i+j];
     out<<std::endl;
   }
   out.close();

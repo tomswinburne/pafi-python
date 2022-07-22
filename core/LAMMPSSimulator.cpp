@@ -389,10 +389,12 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   // pafi fix
   parser->configuration["Temperature"] = std::to_string(T);
-  cmd += "fix hp all pafi __pafipath "+parser->configuration["Temperature"]+" ";
+  cmd += "fix hp "+parser->configuration["PAFIGroup"];
+	cmd += " pafi __pafipath "+parser->configuration["Temperature"]+" ";
   cmd += parser->configuration["Friction"]+" ";
   cmd += parser->seed_str()+" overdamped ";
-  cmd += parser->configuration["OverDamped"]+" com 1\nrun 0";
+  cmd += parser->configuration["OverDamped"]+" com ";
+	cmd += parser->configuration["CoM"]+"\nrun 0";
   run_commands(cmd);
 
   if(parser->preMin) {
@@ -415,11 +417,15 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   refP = *lmp_ptr;
   lammps_free(lmp_ptr);
 
+	cmd = "compute pafi_temp "+parser->configuration["PAFIGroup"]+" temp";
+	run_commands(cmd);
+
   cmd = "reset_timestep 0\n";
+
   cmd += "fix ae all ave/time 1 "+parser->configuration["ThermWindow"]+" ";
   cmd += parser->configuration["ThermSteps"]+" ";
   if(overdamped==1) cmd += "c_pe\n";
-  else cmd += "c_thermo_temp\n";
+  else cmd += "c_pafi_temp\n";
   cmd += "run "+parser->configuration["ThermSteps"];
   run_commands(cmd);
 
@@ -438,7 +444,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   cmd = "reset_timestep 0\n";
   cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
   if(overdamped==1) cmd += "c_pe\n";
-  else cmd += "c_thermo_temp\n";
+  else cmd += "c_pafi_temp\n";
   if(!parser->postDump)
     cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
 
@@ -490,7 +496,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   results["Valid"] = double(bool(results["MaxJump"]<parser->maxjump_thresh));
 
   // deviation average
-  run_commands("reset_timestep "+SampleSteps); // for fix calculation
+  //run_commands("reset_timestep "+SampleSteps); // for fix calculation
   if(!parser->postDump) {
     gather("f_ap",3,dev);
     for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
@@ -505,7 +511,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   } else results["MaxDev"] = sqrt(max_disp);
 
   // reset
-  run_commands("unfix ae\nunfix af\nunfix hp");
+  run_commands("unfix ae\nunfix af\nunfix hp\nuncompute pafi_temp");
 
   // Stress Fixes
   run_script("PostRun");
@@ -568,6 +574,7 @@ std::array<double,9> LAMMPSSimulator::getCellData() {
 };
 
 void LAMMPSSimulator::constrained_average() {
+	std::cout<<"LAMMPSSimulator::constrained_average()"<<std::endl;
   std::string cmd = "run "+parser->configuration["SampleSteps"];
   run_commands(cmd);
 };
@@ -635,15 +642,13 @@ void LAMMPSSimulator::lammps_dump_path(std::string fn, double r) {
   }
 };
 
-void LAMMPSSimulator::lammps_write_dev(std::string fn, double r, double *dev, double *dev_sq) {
+void LAMMPSSimulator::lammps_write_dev(std::string fn, double r, double *dev) {
   std::ofstream out;
   out.open(fn.c_str(),std::ofstream::out);
   out<<header();
   for(int i=0;i<natoms;i++){
     out<<i+1<<" 1 "; // TODO multispecies
-    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]<<" "; // x y z
-    for(int j=0;j<3;j++) out<<dev[3*i+j]<<" "; // <dev>
-    for(int j=0;j<3;j++) out<<sqrt(dev_sq[3*i+j]-dev[3*i+j]*dev[3*i+j])<<" ";
+    for(int j=0;j<3;j++) out<<pathway[3*i+j](r)*scale[j]+dev[3*i+j]<<" ";
     out<<std::endl;
   }
   out.close();

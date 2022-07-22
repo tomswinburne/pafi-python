@@ -198,9 +198,13 @@ void run(MPI_Comm &world,std::string parser_file) {
       }
       if((repeat>=parser.nRepeats) and (total_valid>=min_valid)) break;
     }
-    if(rank==0 and total_valid>0 and parser.write_dev) {
+		bool write_a_dev = parser.write_dev + parser.lammps_write_dev;
+    if(rank==0 and total_valid>0 and write_a_dev) {
       for(j=0;j<vsize;j++) dev[j+vsize] /= 1.0*total_valid;
-      sim.write_dev(g.dev_file,g.params["ReactionCoordinate"],dev+vsize);
+			if(parser.write_dev)
+      	sim.write_dev(g.dev_file,g.params["ReactionCoordinate"],dev+vsize);
+			if(parser.lammps_write_dev)
+				sim.lammps_write_dev(g.lammps_dev_file,g.params["ReactionCoordinate"],dev+vsize);
     }
     g.next(); // wipe ens_data
     MPI_Barrier(world);

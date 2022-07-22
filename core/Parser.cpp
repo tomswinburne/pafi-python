@@ -7,13 +7,16 @@ Parser::Parser(std::string file, bool test) {
 
   // Default Values simulation independent...
   configuration["CoresPerWorker"]="1";
-
+	configuration["PAFIGroup"] = "all";
   configuration["SampleSteps"] = "1000";
   configuration["ThermSteps"] = "1000";
   configuration["ThermWindow"] = "500";
   configuration["nRepeats"] = "1";
   configuration["DumpFolder"] = "./dumps";
   configuration["OverDamped"] = "1";
+	configuration["CoM"] = "1";
+	configuration["WriteDev"] = "0";
+	configuration["LammpsWriteDev"] = "0";
   configuration["Friction"] = "0.1";
   configuration["LogLammps"] = "0";
   configuration["MaxJump"] = "0.1";
@@ -34,9 +37,8 @@ Parser::Parser(std::string file, bool test) {
   configuration["QuadraticThermalExpansionY"] = "0.0";
   configuration["QuadraticThermalExpansionZ"] = "0.0";
 
-
-  seeded = false;
-  // Read the xml file into a vector
+	seeded = false;
+	// Read the xml file into a vector
 	std::ifstream xmlfile(file);
 	std::vector<char> buffer((std::istreambuf_iterator<char>(xmlfile)),
     std::istreambuf_iterator<char>());
@@ -142,6 +144,8 @@ void Parser::set_parameters() {
   globalSeed = std::stoi(configuration["GlobalSeed"]);
   reseed = bool(std::stoi(configuration["FreshSeed"]));
   write_dev = bool(std::stoi(configuration["WriteDev"]));
+	lammps_write_dev = bool(std::stoi(configuration["LammpsWriteDev"]));
+
 };
 
 void Parser::find_and_replace(std::string &s, std::string k, std::string v) {
@@ -175,6 +179,8 @@ void Parser::overwrite_xml(int nProcs) {
   configuration["PostDump"] = "1";
   configuration["PreMin"] = "1";
   configuration["WriteDev"] = "0";
+	configuration["PAFIGroup"] = "all";
+	configuration["LammpsWriteDev"] = "0";
   parameters["Temperature"] = std::make_tuple(0.,0.,1);
 };
 

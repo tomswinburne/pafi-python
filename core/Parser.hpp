@@ -64,7 +64,7 @@ int CoresPerWorker, nRepeats, maxExtraRepeats, globalSeed;
 unsigned random_seed;
 std::string dump_dir;
 bool reseed, seeded, loglammps, postDump, preMin, xml_success,
-  spline_path, match_planes,write_dev,real_coord;
+  spline_path, match_planes,write_dev,lammps_write_dev,real_coord;
 std::set<std::string> parameter_strings;
 
 

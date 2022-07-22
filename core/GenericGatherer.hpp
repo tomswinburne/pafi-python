@@ -76,12 +76,16 @@ void special_r_overwrite(std::vector<double> pathway_r) {
 };
 
 virtual void set_params() {
-  dev_file = parser->dump_dir+"deviation_";
+  dev_file = parser->dump_dir+"X_dX";
+	double val=0.0;
   for(auto s: sweep_order) {
     params[s.first] = sample_axes[s.first][s.second];
-    dev_file += s.first+"_"+std::to_string(sample_axes[s.first][s.second]);
+		val = sample_axes[s.first][s.second];
+		if(s.first=="ReactionCoordinate") val=int(val*sample_axes[s.first].size());
+    dev_file += "_"+s.first+"_"+std::to_string(val);
   }
-  dev_file +="_"+std::to_string(dump_index);
+  dev_file +="_"+std::to_string(dump_index)+".csv";
+	lammps_dev_file =dev_file+"_"+std::to_string(dump_index)+"_lammps.dat";
 }
 
 virtual void prepare(Holder &sim_results) {
@@ -111,7 +115,7 @@ virtual void prepare(Holder &sim_results) {
       //for(auto par: params) raw<<i++<<": "<<par.first<<" ";
       //for(auto res: sim_results) raw<<i++<<": "<<res.first<<"  ";
       for(auto par: params) raw<<par.first<<",";
-      raw<<"WorkerID";
+      raw<<"WorkerID,DumpIndex,DevFile";
       for(auto res: sim_results) raw<<","<<res.first;
       raw<<std::endl;
     }
@@ -131,7 +135,9 @@ virtual int collate(int *valid) {
   // raw output
   for(i=0;i<nWorkers;i++) {
     for(auto par: params) raw<<par.second<<",";
-    raw<<i;
+    raw<<i<<","<<dump_index;
+		if(i==0) raw<<","<<dev_file;
+		else raw<<",None";
     for(j=0;j<dsize;j++) raw<<","<<all_data[i*dsize+j];
     raw<<std::endl;
   }
@@ -257,6 +263,6 @@ std::map<std::string,std::vector<double>> sample_axes;
 std::vector<std::pair<std::string,int>> sweep_order;
 PairHolder<double,double> ens_results;
 std::map<Holder,PairHolder<double,double>> all_ens_results;
-std::string raw_dump_file, dump_suffix, dev_file;
+std::string raw_dump_file, dump_suffix, dev_file, lammps_dev_file;
 };
 #endif
