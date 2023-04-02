@@ -138,7 +138,7 @@ The format is Min, Max, number of Steps
     # DUMMY %Temperature%
     atom_style atomic
     atom_modify map array sort 0 0.0
-    neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+    #neigh_modify every 2 delay 10 check yes page 1000000 one 100000
     read_data  ../systems/EAM-SIA-Fe/image_1.dat
     pair_style    eam/fs
     pair_coeff * * ../systems/EAM-SIA-Fe/Fe.eam.fs Fe

@@ -490,7 +490,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   results["Valid"] = double(bool(results["MaxJump"]<parser->maxjump_thresh));
 
   // deviation average
-  run_commands("reset_timestep "+SampleSteps); // for fix calculation
+  //run_commands("reset_timestep "+SampleSteps); // for fix calculation
   if(!parser->postDump) {
     gather("f_ap",3,dev);
     for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
