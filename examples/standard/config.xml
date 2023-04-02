@@ -54,9 +54,7 @@ The format is Min, Max, number of Steps
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
-    X -> X *(1 + LinearThermalExpansionX*T + QuadraticThermalExpansionX*T^2)
-    Y -> X *(1 + LinearThermalExpansionY*T + QuadraticThermalExpansionY*T^2)
-    Z -> X *(1 + LinearThermalExpansionZ*T + QuadraticThermalExpansionZ*T^2)
+    a(T) -> a_0 * ( 1 + LinearThermalExpansion*T + QuadraticThermalExpansion*T^2 )
   -->
   <LinearThermalExpansionX>0.0</LinearThermalExpansionX>
   <QuadraticThermalExpansionX>0.0</QuadraticThermalExpansionX>

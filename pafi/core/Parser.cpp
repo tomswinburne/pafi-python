@@ -27,6 +27,9 @@ Parser::Parser(std::string file, bool test) {
   configuration["GlobalSeed"] = "137";
   configuration["FreshSeed"] = "1";
   // these could be overwritten during TI, or set to the lambda=1 value
+  configuration["LinearThermalExpansion"] = "0.0";
+  configuration["QuadraticThermalExpansion"] = "0.0";
+
   configuration["LinearThermalExpansionX"] = "0.0";
   configuration["LinearThermalExpansionY"] = "0.0";
   configuration["LinearThermalExpansionZ"] = "0.0";

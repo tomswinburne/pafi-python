@@ -63,28 +63,29 @@ void GenericSimulator::write_dev(std::string fn, double r, double *dev) {
   out.close();
 };
 
-
 void GenericSimulator::expansion(double T, double *newscale) {
-  double coeff;
+  /*
+    Apply thermal expansion to box. If isotropic coefficients are nonzero 
+    they are used, otherwise we use 
+  */
+  double l_coeff=0.0,q_coeff=0.0;
+  if(std::fabs(std::stod(parser->configuration["LinearThermalExpansion"]))>0.) {
+    l_coeff = std::stod(parser->configuration["LinearThermalExpansion"]);
+    q_coeff = std::stod(parser->configuration["QuadraticThermalExpansion"]);
+    for(int i=0;i<3;i++) newscale[i] = 1.0 + l_coeff*T + q_coeff*T*T;
+  } else {
+    l_coeff = std::stod(parser->configuration["LinearThermalExpansionX"]);
+    q_coeff = std::stod(parser->configuration["QuadraticThermalExpansionX"]);
+    newscale[0] = 1.0 + l_coeff*T + q_coeff*T*T;
 
-  newscale[0] = 1.0;
-  coeff = std::stod(parser->configuration["LinearThermalExpansionX"]);
-  newscale[0] += coeff*T;
-  coeff = std::stod(parser->configuration["QuadraticThermalExpansionX"]);
-  newscale[0] += coeff*T*T;
+    l_coeff = std::stod(parser->configuration["LinearThermalExpansionY"]);
+    q_coeff = std::stod(parser->configuration["QuadraticThermalExpansionY"]);
+    newscale[1] = 1.0 + l_coeff*T + q_coeff*T*T;
 
-  newscale[1] = 1.0;
-  coeff = std::stod(parser->configuration["LinearThermalExpansionY"]);
-  newscale[1] += coeff*T;
-  coeff = std::stod(parser->configuration["QuadraticThermalExpansionY"]);
-  newscale[1] += coeff*T*T;
-
-  newscale[2] = 1.0;
-  coeff = std::stod(parser->configuration["LinearThermalExpansionZ"]);
-  newscale[2] += coeff*T;
-  coeff = std::stod(parser->configuration["QuadraticThermalExpansionZ"]);
-  newscale[2] += coeff*T*T;
-  //std::cout<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<std::endl;
+    l_coeff = std::stod(parser->configuration["LinearThermalExpansionZ"]);
+    q_coeff = std::stod(parser->configuration["QuadraticThermalExpansionZ"]);
+    newscale[2] = 1.0 + l_coeff*T + q_coeff*T*T;
+  }
 };
 
 void GenericSimulator::make_path(std::vector<std::string> knot_list, bool real_coord) {
