@@ -1,15 +1,10 @@
 ![](doc/pafi_title.png)
-Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503) when publishing results using PAFI. 
-
-*Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
-
-T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
-
-
 ## MD evaluation of free energy barriers beyond HTST
-v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License
-
-thomas dot swinburne at cnrs.fr
+v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License<br>
+thomas dot swinburne at cnrs.fr<br>
+Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503) when publishing results using PAFI.<br>
+*Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*  <br>
+T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
 
 ## [Installation Instructions](doc/INSTALL.md)
 ## [Getting Started Tutorial](doc/TUTORIAL.md)
