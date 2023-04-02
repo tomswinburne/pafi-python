@@ -1,4 +1,4 @@
-![](pafi_title.png)
+![](doc/pafi_title.png)
 
 # MD evaluation of free energy barriers beyond HTST
 v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License
