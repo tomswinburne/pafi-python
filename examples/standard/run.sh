@@ -12,4 +12,5 @@ NP=4
 # test example, not always required
 echo "localhost slots="$NP > hostfile
 
-mpirun --hostfile hostfile -np ${NP} ./pafi
+#mpirun --hostfile hostfile -np ${NP} 
+./pafi
