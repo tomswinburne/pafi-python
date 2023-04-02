@@ -23,5 +23,4 @@ mpirun -np 4 ../../build/pafi-custom
 
 
 - `standard` : normal PAFI routine, applied to the Fe SIA case 
-- `custom` : example TI application
-
+- `custom` : example TI application <b>POTENTIAL MPI ISSUE WITH MULTIPLE CORES/WORKER- NEED TO CHECK</b>
