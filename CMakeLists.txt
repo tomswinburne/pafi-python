@@ -43,15 +43,15 @@ endif(DEBUG)
 
 file(GLOB src_files "core/*")
 
-add_executable(pafi ${src_files} pafi-pafi/standard/pafi.cpp)
+add_executable(pafi ${src_files} pafi/standard/pafi.cpp)
 
-add_executable(pafi-lammps-preparation ${src_files} path-tools/pafi-lammps-preparation.cpp)
-add_executable(pafi-path-test ${src_files} path-tools/pafi-path-test.cpp)
+add_executable(pafi-lammps-preparation ${src_files} testing/pafi-lammps-preparation.cpp)
+add_executable(pafi-path-test ${src_files} testing/pafi-path-test.cpp)
 
 target_link_libraries(pafi lammps_mpi)
 target_link_libraries(pafi-lammps-preparation lammps_mpi)
 target_link_libraries(pafi-path-test lammps_mpi)
 
 # custom pafi example
-add_executable(pafi-custom ${src_files} pafi-pafi/custom/pafi.cpp)
+add_executable(pafi-custom ${src_files} pafi/custom/pafi.cpp)
 target_link_libraries(pafi-custom lammps_mpi)
