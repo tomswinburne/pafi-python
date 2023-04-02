@@ -1,16 +1,5 @@
-         _______      _______      _______     _________
-        (  ____ )    (  ___  )    (  ____ \    \__   __/
-        | (    )|    | (   ) |    | (    \/       ) (
-        | (____)|    | (___) |    | (__           | |
-        |  _____)    |  ___  |    |  __)          | |
-        | (          | (   ) |    | (             | |
-        | )          | )   ( |    | )          ___) (___
-        |/           |/     \|    |/           \_______/
-        Projected    Average      Force        Integrator
-
+![](pafi_title.png)
 ## [Main Page](README.md)
-
-## [Installation](INSTALL.md)
 
 ## Testing the pathway
 

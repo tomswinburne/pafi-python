@@ -25,7 +25,7 @@ set(CMAKE_CXX_EXTENSIONS ON) #...without compiler extensions like gnu++11
 project (pafi)
 
 include_directories(core)
-include_directories(rapidxml)
+include_directories(core/rapidxml)
 
 include_directories(${CMAKE_INCLUDE_PATH})
 link_directories(${CMAKE_LIBRARY_PATH})
@@ -44,8 +44,9 @@ endif(DEBUG)
 file(GLOB src_files "core/*")
 
 add_executable(pafi ${src_files} pafi-standard/pafi.cpp)
-add_executable(pafi-lammps-preparation ${src_files} pafi-standard/pafi-lammps-preparation.cpp)
-add_executable(pafi-path-test ${src_files} pafi-standard/pafi-path-test.cpp)
+
+add_executable(pafi-lammps-preparation ${src_files} path-tools/pafi-lammps-preparation.cpp)
+add_executable(pafi-path-test ${src_files} path-tools/pafi-path-test.cpp)
 
 target_link_libraries(pafi lammps_mpi)
 target_link_libraries(pafi-lammps-preparation lammps_mpi)

@@ -1,5 +1,4 @@
 #include "Master.hpp"
-
 #include "CustomSimulator.hpp"
 #include "CustomGatherer.hpp"
 
