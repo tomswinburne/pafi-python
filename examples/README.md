@@ -10,11 +10,17 @@ with another potential for testing thermodynamic integration:
 
 ## PAFI Implementations 
 ! Both examples have *very short samples for testing* : increase `SampleSteps` and `ThermSteps` to 500-1000 + !! !
-Run in serial with e.g.
+Run with four workers with e.g.
 ```bash
 cd examples/standard
-../../build/pafi
+mpirun -np 4 ../../build/pafi
 ```
+or
+```bash
+cd examples/custom
+mpirun -np 4 ../../build/pafi-custom
+```
+
 
 - `standard` : normal PAFI routine, applied to the Fe SIA case 
 - `custom` : example TI application

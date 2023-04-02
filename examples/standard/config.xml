@@ -13,7 +13,7 @@ The format is Min, Max, number of Steps
 -->
 <Parameters>
   <ReactionCoordinate>0.0 1.0 7</ReactionCoordinate>
-  <Temperature>0. 20. 3</Temperature>
+  <Temperature>0. 200. 3</Temperature>
 </Parameters>
 
 <Setup>
@@ -41,10 +41,10 @@ The format is Min, Max, number of Steps
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 200 </SampleSteps>
+  <SampleSteps> 2000 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 100 </ThermSteps>
+  <ThermSteps> 500 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
   <MinSteps> 20 </MinSteps>

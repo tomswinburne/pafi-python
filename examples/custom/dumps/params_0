@@ -15,19 +15,41 @@ Scripts:
 
 Input : 
     units metal
-    # DUMMY %Temperature%
     atom_style atomic
     atom_modify map array sort 0 0.0
-    #neigh_modify every 2 delay 10 check yes page 1000000 one 100000
+    neigh_modify every 2 delay 10 check yes page 1000000 one 100000
     read_data  ../systems/EAM-EAM-SIA-Fe/image_1.dat
-    pair_style    eam/fs
-    pair_coeff * * ../systems/EAM-EAM-SIA-Fe/Fe.eam.fs Fe
-    run 0
-    thermo 10
+    pair_style    hybrid/overlay eam/fs eam/fs
+    pair_coeff * * eam/fs 1 ../systems/EAM-EAM-SIA-Fe/Fe.eam.fs Fe
+    pair_coeff * * eam/fs 2 ../systems/EAM-EAM-SIA-Fe/Fe_mm.eam.fs Fe
     run 0
   
 PostRun : 
+    variable dV delete
+    uncompute V_1
+    uncompute V_2
+    unfix escale1
+    unfix escale2
+  
+PostSample : 
+    unfix dV
+  
 PreRun : 
+    variable l1 equal 1.0-%Lambda%
+    variable l2 equal 0.0+%Lambda%
+    run 0
+    fix escale1 all adapt 1 pair eam/fs:1 scale * * v_l1
+    fix escale2 all adapt 1 pair eam/fs:2 scale * * v_l2
+    run 0
+    compute V_1 all pair eam/fs 1
+    compute V_2 all pair eam/fs 2
+    variable V_1 equal (c_V_1/(0.000001+v_l1))
+    variable V_2 equal (c_V_2/(0.000001+v_l2))
+    variable dV equal v_V_2-v_V_1
+  
+PreSample : 
+    fix dV all ave/time 1 %SampleSteps% %SampleSteps% v_dV
+  
 
 Configuration:
 
@@ -40,10 +62,10 @@ LinearThermalExpansion : 0.0
 LinearThermalExpansionX : 0.0
 LinearThermalExpansionY : 0.0
 LinearThermalExpansionZ : 0.0
-LogLammps : 0
+LogLammps : 1
 MatchPlanes : 0
 MaxJump : 0.4
-MinSteps : 20
+MinSteps : 10000
 OverDamped : 1
 PostDump : 0
 PreMin : 1
@@ -54,10 +76,11 @@ QuadraticThermalExpansionZ : 0.0
 ReSampleThresh : 0.8
 RealMEPDist : 1
 Rediscretize : 1
-SampleSteps : 2000
+SampleFixes : dV 1
+SampleSteps : 100
 SplinePath : 1
-ThermSteps : 500
-ThermWindow : 250
+ThermSteps : 100
+ThermWindow : 50
 WriteDev : 0
 maxExtraRepeats : 1
 nRepeats : 1
@@ -66,8 +89,10 @@ nRepeats : 1
 
 Parameter Scans :
 
-	Temperature : 0.000000 -> 200.000000 in 3 steps
+	Temperature : 200.000000 -> 200.000000 in 1 steps
 
-		ReactionCoordinate : 0.000000 -> 1.000000 in 7 steps
+		ReactionCoordinate : 0.000000 -> 0.500000 in 2 steps
+
+			Lambda : 0.000000 -> 1.000000 in 6 steps
 
 

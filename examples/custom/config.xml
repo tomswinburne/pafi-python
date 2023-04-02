@@ -16,14 +16,14 @@ If Temperature and ReactionCoordinate are not present an error will be raised
   <!-- Format is Min, Max, Number of steps -->
   <Lambda>0. 1.0 6</Lambda>
   <ReactionCoordinate>0.0 0.5 2</ReactionCoordinate>
-  <Temperature>10. 50. 2</Temperature>
+  <Temperature>200. 200. 1</Temperature>
 </Parameters>
 
 <Setup>
 
 
   <!-- MUST INCLUDE trailing forward slash -->
-  <DumpFolder>./output/</DumpFolder>
+  <DumpFolder>./dumps/</DumpFolder>
 
   <!-- Global random number seed used to set worker seeds.
   If all parameters are left unchanged, simulation results should be
@@ -41,7 +41,7 @@ If Temperature and ReactionCoordinate are not present an error will be raised
 
 
   <!-- We require nprocs % CoresPerWorker==0 -->
-  <CoresPerWorker> 2 </CoresPerWorker>
+  <CoresPerWorker> 1 </CoresPerWorker>
 
   <!-- Number of samples per plane per worker -->
   <nRepeats> 1 </nRepeats>
@@ -61,13 +61,9 @@ If Temperature and ReactionCoordinate are not present an error will be raised
     Y -> X *(1 + LinearThermalExpansionY*T + QuadraticThermalExpansionY*T^2)
     Z -> X *(1 + LinearThermalExpansionZ*T + QuadraticThermalExpansionZ*T^2)
   -->
-  <LinearThermalExpansionX>0.0</LinearThermalExpansionX>
-  <QuadraticThermalExpansionX>0.0</QuadraticThermalExpansionX>
-  <LinearThermalExpansionY>0.0</LinearThermalExpansionY>
-  <QuadraticThermalExpansionY>0.0</QuadraticThermalExpansionY>
-  <LinearThermalExpansionZ>0.0</LinearThermalExpansionZ>
-  <QuadraticThermalExpansionZ>0.0</QuadraticThermalExpansionZ>
-
+  <LinearThermalExpansion>0.0</LinearThermalExpansion>
+  <QuadraticThermalExpansion>0.0</QuadraticThermalExpansion>
+  
 
   <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane -->
   <OverDamped> 1 </OverDamped>
@@ -80,7 +76,7 @@ If Temperature and ReactionCoordinate are not present an error will be raised
   <Friction> 0.05 </Friction>
 
   <!-- 0/1 Output LAMMPS logfiles for error checking purposes -->
-  <LogLammps> 0 </LogLammps>
+  <LogLammps> 1 </LogLammps>
 
   <!--
    0 : (Default) Output time-and-ensemble averaged in-plane deviation from reference pathway. Can indicate finite temperature path but will have sampling noise
