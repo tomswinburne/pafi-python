@@ -24,7 +24,28 @@ For more details please see (and cite) [our paper](https://journals.aps.org/prl/
 }
 ```
 
-## [Installation Instructions](doc/INSTALL.md)
+## Quick build
+If you have cmake and mpi installed:
+```bash
+export PREFIX=${HOME}/.local # example
+git clone https://github.com/lammps/lammps.git
+git clone https://github.com/tomswinburne/pafi.git
+
+# LAMMPS build
+mkdir lammps/build
+cd lammps/build
+cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
+cmake --build .
+cmake --install . # to PREFIX
+cd ..
+
+# PAFI build
+cd pafi/build
+cmake ..
+make 
+```
+
+## [Detailed Installation Instructions](doc/INSTALL.md)
 ## [Getting Started Tutorial](doc/TUTORIAL.md)
 ## [Hints and Tips](doc/TIPS.md)
 

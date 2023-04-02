@@ -5,15 +5,6 @@
 # test data
 build/*
 
-build-verbose/*
-run/*
-# dev data
-example/*
-!example/Fe*
-!example/config.xml
-!example/sample_plot.py
-!example/alt_sample_plot.py
-
 lib/*
 notes.py
 
