@@ -1,6 +1,8 @@
 ![](doc/pafi_title.png)
 Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503) when publishing results using PAFI. 
+
 *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
+
 T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
 
 
