@@ -2,10 +2,13 @@
 <h2> PAFI: MD evaluation of free energy barriers beyond HTST</h2>
 v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License, thomas dot swinburne at cnrs.fr<br><br>
 
-PAFI performs constrained sampling on [NEB](https://docs.lammps.org/fix_neb.html) hyperplanes, 
-analytically reformulating an exact expression for the free energy gradient from [ABF](https://pubs.acs.org/doi/10.1021/jp506633n).
+PAFI performs constrained sampling on [NEB](https://docs.lammps.org/fix_neb.html) hyperplanes in [LAMMPS](https://docs.lammps.org), 
+analytically reformulating an exact expression for the free energy gradient used in the
+[Adaptive Biasing Force](https://pubs.acs.org/doi/10.1021/jp506633n) method.
 This allows calculation of free energy barriers even when the minimum energy path (MEP)
-is not aligned with the minimum free energy path (MFEP). 
+is not aligned with the minimum free energy path (MFEP). PAFI thus performs
+[stratified sampling](https://en.wikipedia.org/wiki/Stratified_sampling) of configuration 
+space for a particular metastable pathway, with the usual reductions in variance.
 For more details please see (and cite) [our paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503):
 ```bibtex
 @article{PhysRevLett.120.135503,
