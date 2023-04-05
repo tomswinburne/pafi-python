@@ -87,13 +87,10 @@ void run(MPI_Comm &world,std::string parser_file) {
   MPI_Comm_group(world, &world_group);
   MPI_Group_incl(world_group, nWorkers, cmasters, &ensemble_group);
   MPI_Comm_create_group(world, ensemble_group, 0, &ensemble_comm);
-
-
   int error_count,total_error_count;
-
   // see GlobalSeed
   parser.seed(instance);
-
+  
   // set up data gatherer
   GathererTemplate g(parser,nWorkers,dump_index,rank);
   MPI_Bcast(&(g.initialized),1,MPI_INT,0,world);
