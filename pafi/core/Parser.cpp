@@ -22,7 +22,6 @@ Parser::Parser(std::string file, bool test) {
   configuration["PostDump"] = "0";
   configuration["PreMin"] = "1";
   configuration["SplinePath"] = "1";
-  configuration["MatchPlanes"] = "0";
   configuration["RealMEPDist"] = "1";
   configuration["GlobalSeed"] = "137";
   configuration["FreshSeed"] = "1";

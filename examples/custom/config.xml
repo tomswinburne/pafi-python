@@ -20,7 +20,8 @@ If Temperature and ReactionCoordinate are not present an error will be raised
 </Parameters>
 
 <Setup>
-
+  <!-- output level, currently 0 or 1 -->
+  <Verbosity> 0 </Verbosity>
 
   <!-- MUST INCLUDE trailing forward slash -->
   <DumpFolder>./dumps/</DumpFolder>
