@@ -7,6 +7,7 @@ from pafi import PAFIManager
 # initial test
 manager = PAFIManager(MPI.COMM_WORLD,"./StandardConfiguration.xml")
 manager.run()
+
 manager.close()
 exit()
 
