@@ -1,9 +1,6 @@
-import itertools
-import numpy as np
+import os
 from mpi4py import MPI
-from typing import Any
 from ..parsers.Parser import Parser
-from ..results.ResultsHolder import ResultsHolder
 from ..workers.BaseWorker import BaseWorker
 from ..results.BaseGatherer import BaseGatherer
 
@@ -14,14 +11,14 @@ class BaseManager:
         ----------
         world : MPI.Intracomm
             MPI communicator
-        xml_path : str
+        xml_path : os.PathLike[str]
             path to XML configuration file
         Worker : Worker class
             a predefined or custom Worker classes, default BaseWorker
         Gatherer : Gatherer class
             a predefined or custom Gatherer classes, default BaseGatherer
     """
-    def __init__(self,world:MPI.Intracomm,xml_path:str,
+    def __init__(self,world:MPI.Intracomm,xml_path:os.PathLike[str],
                  Worker=BaseWorker,Gatherer=BaseGatherer)->None:
         self.world = world
         self.rank = world.Get_rank()
@@ -62,7 +59,9 @@ class BaseManager:
                 raise IOError("Worker Errors!")
             self.Gatherer = Gatherer(self.params,
                                  self.nWorkers,
-                                 self.rank)
+                                 self.rank,
+                                 self.ensemble_comm,
+                                 self.roots)
         if self.rank==0:
             print(self.params.welcome_message())   
     

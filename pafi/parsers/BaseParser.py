@@ -1,7 +1,6 @@
 import numpy as np
 import os,glob
 import xml.etree.ElementTree as ET
-import pandas as pd
 import numpy as np
 from typing import Union,Any
 ScriptArg = Union[int,float,str]
@@ -9,12 +8,12 @@ ScriptArg = Union[int,float,str]
 class BaseParser:
     """
     """
-    def __init__(self,xml_path:str) -> None:
+    def __init__(self,xml_path:os.PathLike[str]) -> None:
         """Base reader of PAFI XML configuration file
         
         Parameters
         ----------
-        xml_path : str
+        xml_path : os.PathLike[str]
             path to XML file
         
         Methods

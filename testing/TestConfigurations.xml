@@ -14,8 +14,8 @@ DEFAULT PARAMETERS FOR PAFI
 
       Iteration sequence is nested, in order of appearance
     -->
-    <Temperature>100.</Temperature>
-    <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
+    <Temperature>0.</Temperature>
+    <ReactionCoordinate>0.0 1.0 3</ReactionCoordinate>
   </Axes>
 
   <Parameters>
@@ -153,7 +153,6 @@ DEFAULT PARAMETERS FOR PAFI
       thermo 10
       run 0
     </Input>
-
     <!-- 
       Apply any fixes e.g. external stresses before thermalization/sampling 
       Order:

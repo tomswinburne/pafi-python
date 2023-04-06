@@ -1,9 +1,8 @@
 import numpy as np
 import os
 from mpi4py import MPI
-from typing import TypeVar, Generic, Any, List
 from ..parsers.Parser import Parser
-from scipy.interpolate import CubicSpline,interp1d
+from scipy.interpolate import CubicSpline
 
 class BaseWorker:
     """Basic PAFI Worker
@@ -38,13 +37,13 @@ class BaseWorker:
         self.invCell = None
         self.params.seed(worker_instance)
     
-    def load_config(self,file_path:str) -> np.ndarray:
+    def load_config(self,file_path:os.PathLike[str]) -> np.ndarray:
         """Placeholder function to load in file and return configuration
         Overwritten by LAMMPSWorker
         
         Parameters
         ----------
-        file_path : str
+        file_path : os.PathLike[str]
             path to file
 
         Returns

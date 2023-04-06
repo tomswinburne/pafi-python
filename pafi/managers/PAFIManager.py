@@ -1,6 +1,7 @@
 import itertools
 from typing import List
 import numpy as np
+import os
 from mpi4py import MPI
 from ..results.ResultsHolder import ResultsHolder
 from .BaseManager import BaseManager
@@ -8,14 +9,15 @@ from ..workers.PAFIWorker import PAFIWorker
 from ..results.Gatherer import Gatherer
 
 class PAFIManager(BaseManager):
-    def __init__(self, world: MPI.Intracomm, xml_path: str ) -> None:
+    def __init__(self, world: MPI.Intracomm, 
+                 xml_path: os.PathLike[str] ) -> None:
         """Default manager of PAFI, child of BaseManager
 
         Parameters
         ----------
         world : MPI.Intracomm
             MPI communicator
-        xml_path : str
+        xml_path : os.PathLike[str]
             path to XML configuration file
         """
         super().__init__(world, xml_path, PAFIWorker, Gatherer)
@@ -66,9 +68,7 @@ class PAFIManager(BaseManager):
             <> == time averages,  av/err over ensemble
             """)
             print(line(print_fields,top=True))
-
-            
-        
+                
         for axes_coord in itertools.product(*self.params.axes.values()):
             dict_axes = dict(zip(self.params.axes.keys(), axes_coord))
             #print(dict_axes)
@@ -82,14 +82,17 @@ class PAFIManager(BaseManager):
                 results.set("ThermWindow",10)
             
             
-
             final_results = self.Worker.sample(results)
-            final_results["Rank"] = self.rank
-            self.Gatherer.gather(final_results)
+            final_results.set("Rank",self.rank)
+            if self.rank in self.roots:
+                self.Gatherer.gather(final_results)
+                self.Gatherer.collate()
+            
+            
+
             self.world.Barrier()
             res = final_results.get_dict(print_fields[1:],blanks="n/a")
             res["Rank"] = self.rank
-
             if self.rank in self.roots:
                 all_res_str = self.ensemble_comm.gather(res)
             else:
