@@ -14,8 +14,9 @@ DEFAULT PARAMETERS FOR PAFI
 
       Iteration sequence is nested, in order of appearance
     -->
-    <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
-    <Temperature>0 100. 500. 1300.</Temperature>
+    <Temperature>10.</Temperature>
+    <ReactionCoordinate>0.0 1.0 9</ReactionCoordinate>
+
   </Axes>
 
   <Parameters>
@@ -43,10 +44,13 @@ DEFAULT PARAMETERS FOR PAFI
     <nRepeats> 1 </nRepeats>
 
     <!-- Data gathering steps -->
-    <SampleSteps> 2000 </SampleSteps>
+    <SampleSteps>200</SampleSteps>
 
     <!-- Steps for thermalization -->
-    <ThermSteps> 1000 </ThermSteps>
+    <ThermSteps> 200 </ThermSteps>
+    
+    <!-- Average last ThermWindow steps to check thermalization  -->
+    <ThermWindow> 100 </ThermWindow>
 
     <!-- Max steps for optional in-plane minimizations (see below) -->
     <MinSteps> 1000 </MinSteps>
@@ -83,15 +87,15 @@ DEFAULT PARAMETERS FOR PAFI
     Perform an in-plane minimization before thermalization/sampling.
     If pathway is a well-converged NEB/MEP this should not produce any change
     -->
-    <PreMin> 1 </PreMin>
+    <PreMin> 0 </PreMin>
 
     <!-- Determine scipy.interpolate.CubicSpline boundary conditions,
-    which for PADI *must be a string*. 
-    'clamped': the first derivative is set to zero - good for minima
-    'not-a-knot': a good choice if unsure
-    For more details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.CubicSpline.html
+    which for PAFI *must be a string*. 
+      'natural': the second derivative is set to zero
+      'not-a-knot': a good choice if unsure
+    See https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.CubicSpline.html
     -->
-    <CubicSplineBoundaryConditions>clamped</CubicSplineBoundaryConditions>
+    <CubicSplineBoundaryConditions>not-a-knot</CubicSplineBoundaryConditions>
     
     <!-- If == 0 ignore ReactionCoordinate parameter,
     sample only at provided pathway configurations. Test feature -->
@@ -104,7 +108,7 @@ DEFAULT PARAMETERS FOR PAFI
     before and after sampling run which can still be considered "in basin"
     Check for shallow metastability on hyperplane
     -->
-    <MaxJump> 0.4 </MaxJump>
+    <MaxJumpThresh> 0.4 </MaxJumpThresh>
 
     <!-- Resample a batch if less than this proportion are "in-basin" -->
     <ReSampleThresh> 0.8 </ReSampleThresh>
@@ -122,16 +126,16 @@ DEFAULT PARAMETERS FOR PAFI
     Loaded via LAMMPS read_data (see Scripts/Input below)
   -->
   <PathwayConfigurations>
-    ./image_1.dat
-    ./image_2.dat
-    ./image_3.dat
-    ./image_4.dat
-    ./image_5.dat
-    ./image_6.dat
-    ./image_7.dat
-    ./image_8.dat
-    ./image_9.dat
-    </PathwayConfigurations>
+    ../examples/systems/EAM-EAM-SIA-Fe/image_1.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_2.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_3.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_4.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_5.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_6.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_7.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_8.dat
+    ../examples/systems/EAM-EAM-SIA-Fe/image_9.dat
+  </PathwayConfigurations>
   <Scripts>
     
     <!-- LAMMPS script to read in the first pathway
@@ -143,19 +147,38 @@ DEFAULT PARAMETERS FOR PAFI
       # DUMMY %Temperature%
       atom_style atomic
       atom_modify map array sort 0 0.0
-      read_data  %FirstPathImage%
+      read_data  ../examples/systems/EAM-EAM-SIA-Fe/image_1.dat
       pair_style    eam/fs
-      pair_coeff * * ./Fe.eam.fs Fe
+      pair_coeff * * ../examples/systems/EAM-EAM-SIA-Fe/Fe.eam.fs Fe
       run 0
       thermo 10
       run 0
     </Input>
 
-    <!-- Apply any fixes e.g. external stresses before thermalization/sampling -->
+    <!-- 
+      Apply any fixes e.g. external stresses before thermalization/sampling 
+      Order:
+      Input (once)
+
+      for each hyperplane:
+
+        PreRun Script
+        [apply fix_pafi()]
+        PreTherm Script
+        [run ThermSteps]
+        [initialize pafi averages]
+        constrained_average():
+          "run SampleSteps" in PAFIWorker
+        [collate pafi averages]
+        [unfix_pafi()]
+        PostRun Script
+    -->
     <PreRun>
     </PreRun>
-
-    <!-- Turn off these same fixes after each sampling run -->
+    <PreTherm>
+    </PreTherm>
+    <PreTherm>
+    </PreTherm>
     <PostRun>
     </PostRun>
   </Scripts>

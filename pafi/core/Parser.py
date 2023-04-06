@@ -18,7 +18,6 @@ class Parser(BaseParser):
         super().__init__(xml_path)
         
         # initial seed, but must be different across workers...
-        self.rng = np.random.default_rng(self.parameters['GlobalSeed'])
         self.seeded = False
         
         # repeats, valid bounds (see set_min_valid())
@@ -27,7 +26,7 @@ class Parser(BaseParser):
         self.set_min_valid(1) # temporary
     
     def set_min_valid(self,nWorkers):
-        self.minValidResults = self.parameters["RedoThresh"]
+        self.minValidResults = self.parameters["ReSampleThresh"]
         self.minValidResults *= self.parameters["nRepeats"]
         self.minValidResults *= nWorkers
         self.minValidResults = int(self.minValidResults)
@@ -39,28 +38,31 @@ class Parser(BaseParser):
         """
             Generate random number seed- why is this here...
         """
-        self.seed = self.parameters["GlobalSeed"] * (worker_instance+1)
-        self.rng = np.random.default_rng(self.seed)
-        self.rng_int = self.rng.integers(low=100, high=10000)
-        self.seeded=True
+        if not self.seeded:
+            self.randseed = self.parameters["GlobalSeed"] * (worker_instance+1)
+            self.rng = np.random.default_rng(self.randseed)
+            self.rng_int = self.rng.integers(low=100, high=10000)
+            self.seeded=True
     
-    def seed_str(self):
+    def randint(self):
         """
             Gives exactly the same seed each time unless reseed=True
         """
         if not self.seeded:
             print("NOT SEEDED!!")
+            exit(-1)
         
         if self.parameters["FreshSeed"]:
             self.rng_int = self.rng.integers(low=100, high=10000)
         return str(self.rng_int)
-
+    
     def expansion(self,T:float)->np.ndarray:
         """
             Return the relative x,y,z thermal expansion,
             using the data provided in the XML file
         """
         scale = np.ones(3) 
+        
         scale += self.parameters["LinearThermalExpansion"]*T
         scale += self.parameters["QuadraticThermalExpansion"]*T*T
         return scale

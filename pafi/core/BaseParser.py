@@ -32,9 +32,17 @@ class BaseParser:
                 self.read_scripts(branch)
             else:
                 raise ValueError("Error in XML file!")
-        self.check_output()
+        self.check_axes()
+        self.check_output_location()
 
-    def check_output(self)->None:
+    def check_axes(self)->None:
+        """
+            We need at least these...
+        """
+        assert "ReactionCoordinate" in self.axes.keys()
+        assert "Temperature" in self.axes.keys()
+    
+    def check_output_location(self)->None:
         """
             Ensure DumpFolder exists and determine suffix
         """
@@ -42,7 +50,10 @@ class BaseParser:
         df = self.parameters["DumpFolder"]
         self.found_output_dir = os.path.isdir(df)
         if not self.found_output_dir:
-            print(f"WARNING: DumpFolder {df} cannot be found!")
+            try:
+                os.mkdir(df)
+            except Exception as e:
+                print(f"DumpFolder {df} cannot be made!",e)
         else:
             self.suffix=0
             self.find_suffix_and_write()
@@ -50,12 +61,11 @@ class BaseParser:
     def default_axes(self) -> None:
         """
             Default value for "Axes" of XML
+            We don't set any thing as we want to set order in config file?
         """
         self.axes = {}
-        self.axes["ReactionCoordinate"] = np.linspace(0.,1.,11)
-        self.axes["Temperature"] = np.linspace(0.,200.,3)
-    
-    def read_axes(self,xml_axes) -> None:
+        
+    def read_axes(self,xml_axes:ET.Element) -> None:
         """
             Read "Axes" of XML file
             If in form min max int, make an array
@@ -79,17 +89,19 @@ class BaseParser:
         self.parameters["Verbosity"] = 0
         self.parameters["SampleSteps"] = 2000
         self.parameters["ThermSteps"] = 1000
+        self.parameters["ThermWindow"] = 100
         self.parameters["MinSteps"] = 1000
         self.parameters["nRepeats"] = 1
         self.parameters["DumpFolder"] = './dumps'
         self.parameters["OverDamped"] = False
         self.parameters["Friction"] = 0.05
         self.parameters["LogLammps"] = False
-        self.parameters["MaxJump"] = 0.4
+        self.parameters["MaxJumpThresh"] = 0.4
         self.parameters["ReSampleThresh"] = 0.5
         self.parameters["maxExtraRepeats"] = 1
         self.parameters["PostDump"] = False
         self.parameters["PreMin"] = True
+        self.parameters["PostMin"] = True
         self.parameters["SplinePath"] = True
         self.parameters["RealMEPDist"] = True
         self.parameters["GlobalSeed"] = 137
@@ -99,14 +111,14 @@ class BaseParser:
         self.parameters["QuadraticThermalExpansion"] = np.zeros(3)
         self.parameters["CubicSplineBoundaryConditions"] = "clamped"
     
-    def read_parameters(self,xml_parameters) -> None:
+    def read_parameters(self,xml_parameters:ET.Element) -> None:
         """
             Read values for "Parameters" of XML
         """
         for var in xml_parameters:
             tag = var.tag.strip()
             if not tag in self.parameters:
-                print(f"Undefined parameter {tag}, skipping")
+                print(f"Undefined parameter {tag}!!, skipping")
                 continue
             else:
                 o = self.parameters[tag]
@@ -124,8 +136,9 @@ class BaseParser:
                 elif isinstance(o,np.ndarray):
                     nn = np.array(n.strip().split(" "))
                     if "Expansion" in tag:
+                        nn = nn.astype(float)
                         if nn.size == 1:
-                            self.parameters[tag] = np.ones(3)*n
+                            self.parameters[tag] = np.ones(3)*nn.sum()
                         elif nn.size==3:
                             self.parameters[tag] = nn.copy()
                         else:
@@ -180,15 +193,15 @@ class BaseParser:
         """
         self.scripts["PreRun"] = """"""
         self.scripts["PostRun"] = """"""
+        self.scripts["PreTherm"] = """"""
     
     def read_scripts(self,xml_scripts) -> None:
         for script in xml_scripts:
             tag = script.tag.strip()
             if not tag in self.scripts:
-                print(f"Undefined script {tag}, skipping")
-                continue
-            else:
-                self.scripts[tag] = script.text.strip()
+                print(f"adding script {tag}")
+            self.scripts[tag] = script.text.strip()
+                
     
     def as_Element(self) -> ET.Element:
         """
@@ -247,7 +260,7 @@ class BaseParser:
         """
         return field.replace("%"+key+"%",str(value))
     
-    def parse_script(self,script_key,arguments:dict) -> str:
+    def parse_script(self,script_key,arguments:None|dict=None) -> str:
         """
             Parse an input script
             If script_key is not a key of self.scripts, it 
@@ -257,8 +270,9 @@ class BaseParser:
             script = script_key
         else:
             script = self.scripts[script_key]
-        for key,value in arguments.items():
-            script = self.replace(script,key,value)
+        if not arguments is None:
+            for key,value in arguments.items():
+                script = self.replace(script,key,value)
         return script
     
     
@@ -276,37 +290,36 @@ class BaseParser:
         | )          | )   ( |    | )          ___) (___
         |/           |/     \\|    |/           \\_______/
         Projected    Average      Force        Integrator
-            (c) TD Swinburne and M-C Marinica 2021
+            (c) TD Swinburne and M-C Marinica 2023
         
         Axes:
         """
-        for key,val in self.axes:
+        for key,val in self.axes.items():
             welcome += f"""
-                {key}:
-                    {val}
+                {key}: {val}
             """
-        welcome += """
-        Scripts:
-        """
-        for key,val in self.scripts:
-            welcome += f"""
-                {key}:
-                    {val}
-            """
+        
         welcome += """
         Pathway:
         """
         for path in self.PathwayConfigurations:
-            welcome += f"""
-                {path}
+            welcome += f""" {path}
             """
+        welcome += """
+        Scripts:
+        """
+        for key,val in self.scripts.items():
+            welcome += f"""
+                {key}: 
+                    {val}
+            """
+        
         welcome += """
         Parameters:
         """
-        for key,val in self.parameters:
+        for key,val in self.parameters.items():
             welcome += f"""
-                {key}:
-                    {val}
+                {key}: {val}
             """
         return welcome
     
@@ -315,11 +328,11 @@ class BaseParser:
             Ugly implementation to check for duplicates..
         """
         fl = glob.glob(os.path.join(self.parameters["DumpFolder"],"config_*.xml"))
+        self.suffix=-1
         for f in fl:
             suffix = int(f.split("_")[-1][:-4])
             self.suffix = max(self.suffix,suffix)
-        if self.suffix>0:
-            self.suffix += 1
+        self.suffix += 1
         xml_file = os.path.join(self.parameters["DumpFolder"],f"config_{self.suffix}.xml")
         self.to_xml_file(xml_file=xml_file)
             
