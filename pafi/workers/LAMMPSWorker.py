@@ -83,14 +83,19 @@ class LAMMPSWorker(BaseWorker):
             print("Cannot find PAFI package in LAMMPS!")
             self.has_errors = True
         
-    def run_script(self,key:str,arguments:None|dict=None)->None:
-        """
-            Run a script defined in the XML
+    def run_script(self,key:str,arguments:None|dict|ResultsHolder=None)->None:
+        """Run a script defined in the XML
             Important to replace any %wildcards% if they are there!
             TODO - catch these?
+        Parameters
+        ----------
+        key : str
+            script key from XML
+        arguments : None | dict | ResultsHolder, optional
+            will be used to replace wildcards, by default None
         """
         if key in self.params.scripts:
-            script = self.params.parse_script(key,arguments=None)
+            script = self.params.parse_script(key,arguments=arguments)
             self.run_commands(script)
 
     def run_commands(self,cmds : str | List[str]) -> bool:

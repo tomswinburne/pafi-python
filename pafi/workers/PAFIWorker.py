@@ -42,41 +42,103 @@ class PAFIWorker(LAMMPSWorker):
     
     def constrained_average(self,results:ResultsHolder)->ResultsHolder:
         """
-            The hyperplane-contrained averaging step. 
-            See the PAFIWorker() documentation
-            results: ResultsHolder instance
-                essentially a dictionary with inputs and outputs
-                we read it in, add to it, and return
+        
+        Parameters
+        ----------
+        results: ResultsHolder instance
+            used to contain results and custom input paramaters
+            we want these inputs to override self.params()
+        
+        Returns
+        ----------
+        ResultsHolder instance
+            Returns the input data and all output data appended 
+            as dictionary key,value pairs
         """
-        # we want any input paramaters in results() to override self.params()
+        # ensure results inputs should override self.params()
         params = lambda k: results(k) if results.has_key(k) else self.params(k)
-        steps = params("SampleSteps")
-
-        # the fix 'pafi' is a fix_pafi instance, constraining the dynamics
-        self.run_commands(f"""
-            fix avepafi all ave/time 1 {steps} {steps} f_pafi[*]
-            run {steps}
-        """)
-
-        # helper function to convert avepafi to a dictionary
-        pafi_results_dict = self.extract_pafi_data("avepafi")
-        
-        # add all fields to the results object
-        results.set_dict(pafi_results_dict)
-        
-        # unfix the average
-        self.run_commands("unfix avepafi")
+        fixname = self.setup_pafi_average(params("SampleSteps"),"avepafi")
+        self.run_commands("run %d" % params("SampleSteps"))
+        results = self.extract_pafi_data(results,fixname)
         
         return results
     
-
-    """
-        Helper functions to perform the sampling
-
-    """
-    def extract_pafi_data(self,name:str="avepafi")->dict:
+    def sample(self,results:ResultsHolder)->ResultsHolder:
         """
-            extract data from fix_pafi and return a dictionary
+        Main sampling run.
+        
+        1) Execute `PreRun` script
+        2) Apply `fix_pafi` constraint at defined `ReactionCoordinate`
+        3) Execute `PreTherm` script
+        4) Thermalization for `ThermSteps` steps at `Temperature`
+        
+        5) Execute some averaging function
+            In standard PAFI this runs for `SampleSteps` steps and 
+            time averages the output of `fix_pafi`, as shown below.
+            See https://docs.lammps.org/fix_pafi.html for details.
+        
+        6) Extract the average displacment from path if `PostDump==1`
+        7) Minimize in-plane to check system returns to path.
+            The check is the max per-atom displacement : `MaxJump`
+            If `MaxJump` is larger than `MaxJumpMaxJumpThresh` then 
+            the sample is retained but marked as `Valid=False`
+        8) Execute `PostRun` script
+
+        
+        Parameters
+        ----------
+        results: ResultsHolder instance
+            used to contain results and custom input paramaters
+            we want these inputs to override self.params()
+        
+        Returns
+        ----------
+        ResultsHolder instance
+            Returns the input data and all output data appended 
+            as dictionary key,value pairs
+        """
+        results = self.standard_pafi_pre_average(results)
+        
+        results = self.constrained_average(results)
+        
+        results = self.standard_pafi_post_average(results)
+
+        return results
+    
+
+    def setup_pafi_average(self,ave_steps:int,fixname="avepafi")->str:
+        """Helper function to establish PAFI average
+        Parameters
+        ----------
+        
+        ave_steps : int
+            steps for ave/time
+        fixname:str, optional
+            the fix name, default "avepafi"
+        Returns
+        ---------
+        str:
+            the fix name
+        """
+        self.run_commands(f"""
+            fix {fixname} all ave/time 1 {ave_steps} {ave_steps} f_pafi[*]
+        """)
+        return fixname
+    
+    def extract_pafi_data(self,results:ResultsHolder,
+                          name:str="avepafi")->ResultsHolder:
+        """Helper functions to extract PAFI data
+
+        Parameters
+        ----------
+        results : ResultsHolder instance
+            add data and returns
+        name : str, optional
+            fix name, default "avepafi"
+
+        Returns
+        -------
+        ResultsHolder instance
         """
         res = {}
         fix_data = self.extract_fix(name,size=4)
@@ -84,41 +146,28 @@ class PAFIWorker(LAMMPSWorker):
         res['varF'] = fix_data[1]**2 * self.norm_t**2 - res['aveF']**2
         res['avePsi'] = fix_data[2]
         res['dXTangent'] = fix_data[3]
-        return res
+        results.set_dict(res)
+        self.run_commands(f"unfix {name}")
+        return results
     
-    def sample(self,results:ResultsHolder)->ResultsHolder:
-        """
-        Main sampling run.
-        1) Execute `PreRun` script
-        2) Apply `fix_pafi` constraint at defined `ReactionCoordinate`
-        3) Execute `PreTherm` script
-        4) Thermalization for `ThermSteps` steps at `Temperature`
-        5) Execute `constrained_average()` function
-            In standard PAFI this runs for `SampleSteps` steps and 
-            time averages the output of `fix_pafi`, as shown below.
-            See https://docs.lammps.org/fix_pafi.html for details.
-        6) Extract the average displacment from path if `PostDump==1`
-        7) Minimize in-plane to check system returns to path.
-            The check is the max per-atom displacement : `MaxJump`
-            If `MaxJump` is larger than `MaxJumpMaxJumpThresh` then 
-            the sample is retained but marked as `Valid=False`
-        8) Execute `PostRun` script
     
+    def standard_pafi_pre_average(self,results:ResultsHolder)->ResultsHolder:
+        """Helper functions for standard PAFI
 
-        results: ResultsHolder instance
-            essentially a dictionary, defining both 
-            input and output data- temeperature, reaction coordinate
-            and other are defined, and others are filled.
-            *Crucially, if a parameter is specified in results, 
-            it overrides any value in the parameter file*
-            *Must* have `ReactionCoordinate` and `Temperature` defined
+        Parameters
+        ----------
+        results : ResultsHolder instance
+            custom input data overrides params
+        
+        Returns
+        ----------
+        results : ResultsHolder instance
+            add data and returns custom inputs as well    
         """
-
-        # the esssentials
         assert results.has_key("ReactionCoordinate")
         assert results.has_key("Temperature")
         
-        kB = 8.617e-5 # where should I put this...
+        self.kB = 8.617e-5 # where should I put this...
 
         # we want any input paramaters in results() to override self.params()
         params = lambda k: results(k) if results.has_key(k) else self.params(k)
@@ -129,7 +178,7 @@ class PAFIWorker(LAMMPSWorker):
         
         self.initialize_hyperplane(r,0.)
         # TODO: check order in public PAFI
-        self.run_script("PreRun")
+        self.run_script("PreRun",results)
         self.initialize_hyperplane(r,T)
         n_atoms = self.get_natoms()
 
@@ -149,10 +198,10 @@ class PAFIWorker(LAMMPSWorker):
                 minimize 0 0.0001 {min_steps} {min_steps}
             """)
         if params("PostMin"):
-            change_x = -self.gather("x",1,3)
+            self.change_x = -self.gather("x",1,3)
         
         # PreThermalize (optional)
-        self.run_script("PreTherm")
+        self.run_script("PreTherm",results)
         results.set("MinEnergy",self.get_energy())
         
         # establish temperature time average and thermalize
@@ -168,7 +217,7 @@ class PAFIWorker(LAMMPSWorker):
         sampleT = self.extract_fix("__ae")
         
         if overdamped==1:
-            sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/kB
+            sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/self.kB
         results.set("preT",sampleT)
         self.run_commands(f"""
             unfix __ae
@@ -184,13 +233,29 @@ class PAFIWorker(LAMMPSWorker):
             self.run_commands(f"""
             fix pafiax all ave/atom 1 {steps} {steps} x y z
             """)
+        return results
+    
+    def standard_pafi_post_average(self,results:ResultsHolder)->ResultsHolder:
+        """Helper functions for standard PAFI
+
+        Parameters
+        ----------
+        results : ResultsHolder instance
+            custom input data overrides params
         
-        results = self.constrained_average(results)
+        Returns
+        ----------
+        results : ResultsHolder instance
+            add data and returns custom inputs as well    
+        """
+        # we want any input paramaters in results() to override self.params()
+        params = lambda k: results(k) if results.has_key(k) else self.params(k)
+        n_atoms = self.get_natoms()
         
         # get final temperature
         sampleT = self.extract_fix("__ae")
-        if overdamped==1:
-            sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/kB
+        if params("OverDamped")==1:
+            sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/self.kB
         results.set("postT",sampleT)
         self.run_commands(f"""
             unfix __ae
@@ -217,16 +282,16 @@ class PAFIWorker(LAMMPSWorker):
             min_style fire
             minimize 0 0.0001 {min_steps} {min_steps}
         """)
-        change_x += self.gather("x",1,3)
-        results.set("MaxJump",self.pbc_dist(change_x,axis=1).max())
+        self.change_x += self.gather("x",1,3)
+        results.set("MaxJump",self.pbc_dist(self.change_x,axis=1).max())
         results.set("Valid",bool(results("MaxJump")<params("MaxJumpThresh")))
-        
+        del self.change_x
         # unfix hyperplane
         self.run_commands("unfix pafi")
-        self.run_script("PostRun")
+        self.run_script("PostRun",results)
         # rescale back.... not sure if this is required
+        r = results("ReactionCoordinate")
         self.initialize_hyperplane(r,0.0)
-
         return results
   
             

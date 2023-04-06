@@ -37,7 +37,7 @@ DEFAULT PARAMETERS FOR PAFI
     <FreshSeed>0</FreshSeed>
 
     <!-- We require nprocs % CoresPerWorker==0 -->
-    <CoresPerWorker> 2 </CoresPerWorker>
+    <CoresPerWorker> 1 </CoresPerWorker>
 
     <!-- Number of samples per plane per worker -->
     <nRepeats> 1 </nRepeats>

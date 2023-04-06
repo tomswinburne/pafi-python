@@ -11,6 +11,13 @@ class ResultsHolder:
     """
     def __init__(self) -> None:
         self.data = {}
+    def items(self)-> Any: # TODO what is the type here?
+        """return items for iteration
+        Returns
+        -------
+        dictionary.items()
+        """
+        return self.data.items()
     def __call__(self,key:str)->Any:
         """_summary_
 

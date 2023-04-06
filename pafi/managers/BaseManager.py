@@ -1,6 +1,5 @@
-import os
 from mpi4py import MPI
-from ..parsers.Parser import Parser
+from ..parsers.Parser import BaseParser
 from ..workers.BaseWorker import BaseWorker
 from ..results.BaseGatherer import BaseGatherer
 
@@ -11,20 +10,20 @@ class BaseManager:
         ----------
         world : MPI.Intracomm
             MPI communicator
-        xml_path : os.PathLike[str]
-            path to XML configuration file
+        parser : PAFI Parser object 
+            A BaseParser or inherited class instance
         Worker : Worker class
             a predefined or custom Worker classes, default BaseWorker
         Gatherer : Gatherer class
             a predefined or custom Gatherer classes, default BaseGatherer
     """
-    def __init__(self,world:MPI.Intracomm,xml_path:os.PathLike[str],
+    def __init__(self,world:MPI.Intracomm,params:BaseParser,
                  Worker=BaseWorker,Gatherer=BaseGatherer)->None:
         self.world = world
         self.rank = world.Get_rank()
         self.nProcs = world.Get_size()
         # Read in configuration file
-        self.params = Parser(xml_path=xml_path)
+        self.params = params
         self.CoresPerWorker = int(self.params("CoresPerWorker"))
         if self.nProcs%self.CoresPerWorker!=0:
             if self.rank==0:

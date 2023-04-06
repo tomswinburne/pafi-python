@@ -62,8 +62,8 @@ class BaseGatherer:
 
         if self.rank == 0 and not all_epoch_data is None:
             if self.all_data is None:
-                self.all_data = {k:[] for k in self.epoch_data.keys()}
-            for k in self.epoch_data.keys():
+                self.all_data = {k:[] for k in all_epoch_data[0].keys()}
+            for k in all_epoch_data[0].keys():
                 self.all_data[k] += list(d[k] for d in all_epoch_data)
     
     def write_pandas(self,path:os.PathLike[str])->None:

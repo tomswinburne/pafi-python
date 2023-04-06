@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 from typing import Union,Any
 ScriptArg = Union[int,float,str]
+from ..results.ResultsHolder import ResultsHolder
 
 class BaseParser:
     """
@@ -350,7 +351,8 @@ class BaseParser:
         """
         return field.replace("%"+key+"%",str(value))
     
-    def parse_script(self,script_key:str,arguments:None|dict=None) -> str:
+    def parse_script(self,script_key:str,
+                     arguments:None|dict|ResultsHolder=None) -> str:
         """Parse an input script
             If script_key is not a key of self.scripts, it 
             it is treated as a script itself
@@ -359,7 +361,7 @@ class BaseParser:
         ----------
         script_key : str
             key for <Script> in XML file
-        arguments : None | dict, optional
+        args : None | dict, optional
             Dictionary of key,value pairs for replace(), by default None
 
         Returns
