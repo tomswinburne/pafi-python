@@ -116,5 +116,8 @@ class PAFIManager(BaseManager):
             if self.rank==0:
                 for res in all_res_str:
                     print(line(res))
+        if self.rank==0:
+            pandas_csv = self.params.csv_file
+            self.Gatherer.write_pandas(path=pandas_csv)
         
     

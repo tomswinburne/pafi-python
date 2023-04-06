@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='utf-8'?>
 <PAFI>
   <Axes>
-    <Temperature> 10 </Temperature>
-    <ReactionCoordinate>  0 0.125 0.25 0.375 0.5 0.625 0.75 0.875   1 </ReactionCoordinate>
+    <Temperature>  0 </Temperature>
+    <ReactionCoordinate>  0 0.5   1 </ReactionCoordinate>
   </Axes>
   <Parameters>
     <CoresPerWorker>1</CoresPerWorker>
     <WriteDev>0</WriteDev>
     <Verbosity>0</Verbosity>
-    <SampleSteps>200</SampleSteps>
-    <ThermSteps>200</ThermSteps>
-    <ThermWindow>100</ThermWindow>
+    <SampleSteps>20</SampleSteps>
+    <ThermSteps>20</ThermSteps>
+    <ThermWindow>10</ThermWindow>
     <MinSteps>1000</MinSteps>
     <nRepeats>1</nRepeats>
     <DumpFolder>./dumps/</DumpFolder>

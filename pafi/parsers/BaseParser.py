@@ -439,6 +439,8 @@ class BaseParser:
             self.suffix = max(self.suffix,suffix)
         self.suffix += 1
         xml_file = os.path.join(df,f"config_{self.suffix}.xml")
+        self.csv_file = os.path.join(df,f"pafi_data_{self.suffix}.csv")
+        print(self.csv_file)
         self.to_xml_file(xml_file=xml_file)
             
 
