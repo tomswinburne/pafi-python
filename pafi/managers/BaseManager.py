@@ -1,14 +1,28 @@
 import itertools
 import numpy as np
 from mpi4py import MPI
-from typing import TypeVar, Generic, Any
+from typing import Any
 from ..parsers.Parser import Parser
 from ..results.ResultsHolder import ResultsHolder
 from ..workers.BaseWorker import BaseWorker
 from ..results.BaseGatherer import BaseGatherer
 
 class BaseManager:
-    def __init__(self,world:MPI.Intracomm,xml_path:str,Worker=BaseWorker,Gatherer=BaseGatherer)->None:
+    """Base class for PAFI manager
+
+        Parameters
+        ----------
+        world : MPI.Intracomm
+            MPI communicator
+        xml_path : str
+            path to XML configuration file
+        Worker : Worker class
+            a predefined or custom Worker classes, default BaseWorker
+        Gatherer : Gatherer class
+            a predefined or custom Gatherer classes, default BaseGatherer
+    """
+    def __init__(self,world:MPI.Intracomm,xml_path:str,
+                 Worker=BaseWorker,Gatherer=BaseGatherer)->None:
         self.world = world
         self.rank = world.Get_rank()
         self.nProcs = world.Get_size()
@@ -48,11 +62,13 @@ class BaseManager:
                 raise IOError("Worker Errors!")
             self.Gatherer = Gatherer(self.params,
                                  self.nWorkers,
-                                 self.params.suffix,
                                  self.rank)
         if self.rank==0:
             print(self.params.welcome_message())   
     
     def close(self)->None:
+        """Close Manager
+            closes Worker
+        """
         self.Worker.close()
             

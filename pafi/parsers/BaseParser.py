@@ -10,8 +10,8 @@ class BaseParser:
     """
     """
     def __init__(self,xml_path:str) -> None:
-        """Read PAFI XML file
-
+        """Base reader of PAFI XML configuration file
+        
         Parameters
         ----------
         xml_path : str
@@ -19,7 +19,9 @@ class BaseParser:
         
         Methods
         ----------
-
+        __call__
+        find_suffix_and_write
+        
 
         Raises
         ------
@@ -102,7 +104,8 @@ class BaseParser:
             data = np.fromstring(axis.text.strip(),sep=' ')
             # check for form min max nsteps
             min_max_form = data.size==3 and data[0]<data[1]
-            min_max_form *= int(data[2])>1 and int(data[2])<20
+            if min_max_form:
+                min_max_form *= int(data[2])>1 and int(data[2])<20
             if min_max_form:
                 self.axes[axis.tag] = np.linspace(data[0],data[1],int(data[2]))
             else:

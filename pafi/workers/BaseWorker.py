@@ -6,9 +6,17 @@ from ..parsers.Parser import Parser
 from scipy.interpolate import CubicSpline,interp1d
 
 class BaseWorker:
-    """
-        Data Gatherer for PAFI
-    """
+    """Basic PAFI Worker
+
+        Parameters
+        ----------
+        comm : MPI.Intracomm
+            MPI communicator
+        params : Parser
+            Predefined or custom PAFI Parser object
+        worker_instance : int
+            unique worker rank
+        """
     def __init__(self, comm : MPI.Intracomm,
                  params:Parser,worker_instance:int) -> None:
         self.worker_instance = worker_instance
@@ -31,18 +39,36 @@ class BaseWorker:
         self.params.seed(worker_instance)
     
     def load_config(self,file_path:str) -> np.ndarray:
-        """
-            load in file and return configuration
-            Will be LAMMPS....
+        """Placeholder function to load in file and return configuration
+        Overwritten by LAMMPSWorker
+        
+        Parameters
+        ----------
+        file_path : str
+            path to file
+
+        Returns
+        -------
+        np.ndarray, shape (natoms,3)
+            configuration vector
         """
         assert os.path.exists(file_path)
         return np.loadtxt(file_path)
 
     def pbc(self,X:np.ndarray,central:bool=True)->np.ndarray:
-        """
-            Minimum image convention, using cell data
-            central : bool
-                map scaled coordinates to [-.5,.5] if True, else [0,1]
+        """Minimum image convention, using cell data
+            
+        Parameters
+        ----------
+        X : np.ndarray, shape (natoms,3)
+            configuration vector
+        central : bool, optional
+            map scaled coordinates to [-.5,.5] if True, else [0,1], by default True
+
+        Returns
+        -------
+        np.ndarray
+            wrapped vector
         """
         if not self.has_cell_data:
             return X
@@ -53,17 +79,34 @@ class BaseWorker:
         
         return X
     def pbc_dist(self,X:np.ndarray,axis:None|int=None)->float|np.ndarray:
+        """Minimum image distance
+        
+        Parameters
+        ----------
+        X : np.ndarray, shape (natoms,3)
+            configuration vector
+        axis : None | int, optional
+            as in np.linalg.norm, by default None
+        
+        Returns
+        -------
+        float|np.ndarray
+            norm of the vector or vector(s)
+        """
         return np.linalg.norm(self.pbc(X),axis=axis)
     
     def make_path(self):
-        """
-            TODO: parallel i/o and splining
+        """Make the splined PAFI path via scipy.interpolate.CubicSpline
+
+            All parameters are read in from XML file
+
+            Lots to do here in principle, TODO: parallel i/o and splining
             Only really a problem with memory limitations, say 2GB / core.
-            This implies 300M coordinates at double precision == 1M atoms, 100 planes.
+            This implies 300M double coordinates == 1M atoms, 100 planes.
             Typical large-scale use - 150k atoms, 20 planes.
             So memory-heavy but nothing problematic so far, leaving for future
         """
-        
+
         # load configurations
         pc = self.params.PathwayConfigurations
         all_X = [self.pbc(self.load_config(pc[0]),central=False)]
@@ -87,8 +130,21 @@ class BaseWorker:
 
     def pathway(self,r:float,nu:int=0,
                 scale:float|np.ndarray[3]=1.0)->np.ndarray:
-        """
-            evaluate the pathway
+        """Evaluate the PAFI pathway
+
+        Parameters
+        ----------
+        r : float
+            reaction coordinate, should be in [0,1]
+        nu : int, optional
+            derivative order, by default 0
+        scale : float | np.ndarray[3], optional
+            thermal expansion, by default 1.0
+
+        Returns
+        -------
+        np.ndarray, shape (natoms,3)
+            pathway configuration
         """
         if isinstance(scale,float):
             scale = np.eye(3)*float(scale)

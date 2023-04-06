@@ -3,25 +3,31 @@ import os
 from typing import Any, List
 from ..parsers.Parser import Parser
 from mpi4py import MPI
-from lammps import lammps, MPIAbortException,LMP_STYLE_GLOBAL,LMP_TYPE_VECTOR,LMP_TYPE_SCALAR
-        
+from lammps import lammps,LMP_STYLE_GLOBAL,LMP_TYPE_VECTOR,LMP_TYPE_SCALAR
 from .BaseWorker import BaseWorker
 from ..results.ResultsHolder import ResultsHolder
 
 class LAMMPSWorker(BaseWorker):
-    """
-        LAMMPS worker, inheriting BaseWorker
-    """
+    """LAMMPS worker for PAFI, inheriting BaseWorker
+
+        Initialization routine:
+        - runs "Input" script, loading first configuration
+        - extracts cell data
+        - defines various functions wrapping computes etc.
+        - defines initialize_hyperplane function to set plane
+
+        Parameters
+        ----------
+        comm : MPI.Intracomm
+            MPI communicator
+        params : Parser
+            Predefined or custom PAFI Parser object
+        worker_instance : int
+            unique worker rank
+        """
     def __init__(self, comm: MPI.Intracomm, 
                  params: Parser, worker_instance: int) -> None:
         super().__init__(comm, params, worker_instance)
-        """
-            Worker with all direct LAMMPS interaction
-            - runs "Input" script, loading first configuration
-            - extracts cell data
-            - defines various functions wrapping computes etc.
-            - defines initialize_hyperplane function to set plane
-        """
         self.name = "LAMMPSWorker"
         self.last_error_message = ""
         self.start_lammps()
@@ -45,8 +51,10 @@ class LAMMPSWorker(BaseWorker):
         
     
     def start_lammps(self)->None:
-        """
-            Load LAMMPS instance
+        """Initialize LAMMPS instance
+
+            Optionally 
+
         """
         if self.params("LogLammps"):
             logfile = 'log.lammps.%d' % self.worker_instance 
@@ -56,7 +64,7 @@ class LAMMPSWorker(BaseWorker):
             cmdargs = ['-screen','none','-log',logfile]
             self.L = lammps(comm=self.comm,cmdargs=cmdargs)
             self.check_lammps_compatibility()
-        except MPIAbortException as ae:
+        except Exception as ae:
             print("Couldn't load LAMMPS!")
             self.has_errors = True
     
@@ -118,7 +126,7 @@ class LAMMPSWorker(BaseWorker):
         
         try:
             res = self.L.gather(name,type,count)
-        except MPIAbortException as ae:
+        except Exception as ae:
             if self.local_rank==0:
                 print("Error in gather:",ae)
             self.last_error_message = ae
@@ -137,7 +145,7 @@ class LAMMPSWorker(BaseWorker):
         try:
             self.L.scatter(name,type,count,
                            np.ctypeslib.as_ctypes(data.flatten()))
-        except MPIAbortException as ae:
+        except Exception as ae:
             if self.local_rank==0:
                 print("Error in scatter:",ae)
             self.last_error_message = ae

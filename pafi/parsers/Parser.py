@@ -9,10 +9,23 @@ ScriptArg = Union[int,float,str]
 from .BaseParser import BaseParser
 
 class Parser(BaseParser):
-    """
-        BaseParameters for a PAFI run,
-        read from an XML file.
-        with a few extra helper functions
+    """Default reader of PAFI XML configuration file
+
+        Parameters
+        ----------
+        xml_path : str
+            path to XML file
+        
+        Methods
+        ----------
+        __call__
+        find_suffix_and_write
+        
+
+        Raises
+        ------
+        IOError
+            If path is not found
     """
     def __init__(self, xml_path: str) -> None:
         super().__init__(xml_path)
@@ -34,9 +47,13 @@ class Parser(BaseParser):
     def min_valid(self):
         return self.minValidResults
     
-    def seed(self,worker_instance):
-        """
-            Generate random number seed- why is this here...
+    def seed(self,worker_instance:int)->None:
+        """Generate random number seed
+
+        Parameters
+        ----------
+        worker_instance : int
+            unique to each worker, to ensure independent seed
         """
         if not self.seeded:
             self.randseed = self.parameters["GlobalSeed"] * (worker_instance+1)
@@ -44,9 +61,10 @@ class Parser(BaseParser):
             self.rng_int = self.rng.integers(low=100, high=10000)
             self.seeded=True
     
-    def randint(self):
+    def randint(self)->int:
         """
-            Gives exactly the same seed each time unless reseed=True
+            Generate random integer.
+            Gives exactly the same result each time unless reseed=True
         """
         if not self.seeded:
             print("NOT SEEDED!!")
@@ -57,12 +75,20 @@ class Parser(BaseParser):
         return str(self.rng_int)
     
     def expansion(self,T:float)->np.ndarray:
-        """
-            Return the relative x,y,z thermal expansion,
+        """Return the relative x,y,z thermal expansion,
             using the data provided in the XML file
+
+        Parameters
+        ----------
+        T : float
+            Temperature in K
+
+        Returns
+        -------
+        np.ndarray, shape (3,)
+            relative x,y,z thermal expansion
         """
         scale = np.ones(3) 
-        
         scale += self.parameters["LinearThermalExpansion"]*T
         scale += self.parameters["QuadraticThermalExpansion"]*T*T
         return scale

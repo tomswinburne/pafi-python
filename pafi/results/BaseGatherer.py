@@ -1,9 +1,18 @@
-import numpy as np
-import os
-from mpi4py import MPI
-from typing import TypeVar, Generic, Any, List
 from ..parsers.Parser import Parser
 
 class BaseGatherer:
-    def __init__(self,params:Parser,nWorkers:int,suffix:int,rank:int)->None:
-        pass
+    def __init__(self,params:Parser,nWorkers:int,rank:int)->None:
+        """Basic gatherer of PAFI simulation data
+
+        Parameters
+        ----------
+        params : Parser
+            Custom or predefined PAFI Parser object
+        nWorkers : int
+            total number of PAFI workers
+        rank : int
+            global MPI rank
+        """
+        self.params = params
+        self.nWorkers = nWorkers
+        self.rank = rank
