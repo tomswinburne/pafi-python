@@ -439,7 +439,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
   cmd += "fix ae all ave/time 1 "+SampleSteps+" "+SampleSteps+" ";
   if(overdamped==1) cmd += "c_pe\n";
   else cmd += "c_thermo_temp\n";
-  if(!parser->postDump)
+  if(parser->postDump)
     cmd += "fix ap all ave/atom 1 "+SampleSteps+" "+SampleSteps+" x y z\n";
 
   cmd += "fix af all ave/time 1 "+SampleSteps+" "+SampleSteps;
@@ -491,7 +491,7 @@ void LAMMPSSimulator::sample(Holder params, double *dev) {
 
   // deviation average
   //run_commands("reset_timestep "+SampleSteps); // for fix calculation
-  if(!parser->postDump) {
+  if(parser->postDump) {
     gather("f_ap",3,dev);
     for(int i=0;i<3*natoms;i++) dev[i] = dev[i]/scale[i%3]-path(i,r,0,1.0);
     pbc.wrap(dev,3*natoms);

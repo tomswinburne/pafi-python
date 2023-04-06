@@ -1,14 +1,56 @@
-![](doc/pafi_title.png)
+<img src="doc/pafi_title.png" width=500></img>
+<h2> PAFI: MD evaluation of free energy barriers beyond HTST</h2>
+v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License, thomas dot swinburne at cnrs.fr<br><br>
 
-# MD evaluation of free energy barriers beyond HTST
-v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License
+PAFI performs constrained sampling on [NEB](https://docs.lammps.org/fix_neb.html) hyperplanes in [LAMMPS](https://docs.lammps.org), 
+analytically reformulating an exact expression for the free energy gradient used in the
+[Adaptive Biasing Force](https://pubs.acs.org/doi/10.1021/jp506633n) method.
+This allows calculation of free energy barriers even when the minimum energy path (MEP)
+is not aligned with the minimum free energy path (MFEP). PAFI thus performs
+[stratified sampling](https://en.wikipedia.org/wiki/Stratified_sampling) of configuration 
+space for a particular metastable pathway, with the usual reductions in variance.
+For more details please see (and cite) [our paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503):
+```bibtex
+@article{PhysRevLett.120.135503,
+  title = {Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems},
+  author = {Swinburne, Thomas D. and Marinica, Mihai-Cosmin},
+  journal = {Phys. Rev. Lett.},
+  volume = {120},
+  issue = {13},
+  pages = {135503},
+  numpages = {6},
+  year = {2018},
+  month = {Mar},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.120.135503},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.120.135503}
+}
+```
 
-thomas dot swinburne at cnrs.fr
+## Quick build
+If you have cmake and mpi installed:
+```bash
+export PREFIX=${HOME}/.local # example
+git clone https://github.com/lammps/lammps.git
+git clone https://github.com/tomswinburne/pafi.git
 
-## [Installation Instructions](doc/INSTALL.md)
+# LAMMPS build
+mkdir lammps/build
+cd lammps/build
+cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
+cmake --build .
+cmake --install . # to PREFIX
+cd ..
+
+# PAFI build
+cd pafi/build
+cmake ..
+make 
+```
+
+## [Detailed Installation Instructions](doc/INSTALL.md)
 ## [Getting Started Tutorial](doc/TUTORIAL.md)
 ## [Hints and Tips](doc/TIPS.md)
-
 
 ## External Libraries
 - [LAMMPS](https://lammps.sandia.gov) MD code
@@ -18,9 +60,7 @@ thomas dot swinburne at cnrs.fr
 ## TODO
 1. Restart files from pathway deviations
 2. Smoothed spline interpolation for more general reference pathways
+3. print parameter object as csv also, or json
+4. have proper testing routine
+5. incorporate Arnauds path preparation scripts
 
-
-Using PAFI? Please cite [this paper](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.120.135503)
-> *Unsupervised Calculation of Free Energy Barriers in Large Crystalline Systems*   
-> T.D. Swinburne and M.-C. Marinica, Physical Review Letters 120 (13), 135503, 2018
-Please cite the above when publishing results using PAFI

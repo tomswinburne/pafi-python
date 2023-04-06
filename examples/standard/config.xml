@@ -12,10 +12,9 @@ The format is Min, Max, number of Steps
 'pafi-path-test' will ignore the Temperature scan
 -->
 <Parameters>
-  <ReactionCoordinate>0.0 1.0 13</ReactionCoordinate>
-  <Temperature>10. 20. 2</Temperature>
+  <ReactionCoordinate>0.0 1.0 7</ReactionCoordinate>
+  <Temperature>0. 200. 3</Temperature>
 </Parameters>
-
 
 <Setup>
   <!-- MUST include trailing forward slash -->
@@ -33,9 +32,7 @@ The format is Min, Max, number of Steps
   <!--If FreshSeed==1, a new seed is set for each sampling run.
     With FreshSeed==0, a worker uses the same seed for all planes.
     This may reduce error in stochastic gradients... -->
-  <FreshSeed>1</FreshSeed>
-
-
+  <FreshSeed>0</FreshSeed>
 
   <!-- We require nprocs % CoresPerWorker==0 -->
   <CoresPerWorker> 1 </CoresPerWorker>
@@ -44,29 +41,25 @@ The format is Min, Max, number of Steps
   <nRepeats> 1 </nRepeats>
 
   <!-- Data gathering steps -->
-  <SampleSteps> 20 </SampleSteps>
+  <SampleSteps> 2000 </SampleSteps>
 
   <!-- Steps for thermalization -->
-  <ThermSteps> 10 </ThermSteps>
+  <ThermSteps> 500 </ThermSteps>
 
   <!-- Max steps for optional in-plane minimizations (see below) -->
   <MinSteps> 20 </MinSteps>
 
   <!--
     RELATIVE thermal expansion coefficients along X,Y,Z directions of simulation-
-    X -> X *(1 + LinearThermalExpansionX*T + QuadraticThermalExpansionX*T^2)
-    Y -> X *(1 + LinearThermalExpansionY*T + QuadraticThermalExpansionY*T^2)
-    Z -> X *(1 + LinearThermalExpansionZ*T + QuadraticThermalExpansionZ*T^2)
+    a(T) -> a_0 * ( 1 + LinearThermalExpansion*T + QuadraticThermalExpansion*T^2 )
+    Can also define LinearThermalExpansionX etc for anisotropy.
   -->
-  <LinearThermalExpansionX>0.0</LinearThermalExpansionX>
-  <QuadraticThermalExpansionX>0.0</QuadraticThermalExpansionX>
-  <LinearThermalExpansionY>0.0</LinearThermalExpansionY>
-  <QuadraticThermalExpansionY>0.0</QuadraticThermalExpansionY>
-  <LinearThermalExpansionZ>0.0</LinearThermalExpansionZ>
-  <QuadraticThermalExpansionZ>0.0</QuadraticThermalExpansionZ>
+  <LinearThermalExpansion>0.0</LinearThermalExpansion>
+  <QuadraticThermalExpansion>0.0</QuadraticThermalExpansion>
+  
 
-
-  <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane -->
+  <!-- perform overdamped/Brownian or Langevin dynamics on hyperplane. 
+  If OverDamped==1, temperature measurement will be approximate -->
   <OverDamped> 1 </OverDamped>
 
   <!--
@@ -116,15 +109,15 @@ The format is Min, Max, number of Steps
   Loaded via LAMMPS read_data (see Scripts/Input below)
   -->
   <PathwayConfigurations>
-    ../systems/EAM-SIA-Fe/image_1.dat
-    ../systems/EAM-SIA-Fe/image_2.dat
-    ../systems/EAM-SIA-Fe/image_3.dat
-    ../systems/EAM-SIA-Fe/image_4.dat
-    ../systems/EAM-SIA-Fe/image_5.dat
-    ../systems/EAM-SIA-Fe/image_6.dat
-    ../systems/EAM-SIA-Fe/image_7.dat
-    ../systems/EAM-SIA-Fe/image_8.dat
-    ../systems/EAM-SIA-Fe/image_9.dat
+    ../systems/EAM-EAM-SIA-Fe/image_1.dat
+    ../systems/EAM-EAM-SIA-Fe/image_2.dat
+    ../systems/EAM-EAM-SIA-Fe/image_3.dat
+    ../systems/EAM-EAM-SIA-Fe/image_4.dat
+    ../systems/EAM-EAM-SIA-Fe/image_5.dat
+    ../systems/EAM-EAM-SIA-Fe/image_6.dat
+    ../systems/EAM-EAM-SIA-Fe/image_7.dat
+    ../systems/EAM-EAM-SIA-Fe/image_8.dat
+    ../systems/EAM-EAM-SIA-Fe/image_9.dat
   </PathwayConfigurations>
 
 </Setup>
@@ -139,9 +132,9 @@ The format is Min, Max, number of Steps
     atom_style atomic
     atom_modify map array sort 0 0.0
     #neigh_modify every 2 delay 10 check yes page 1000000 one 100000
-    read_data  ../systems/EAM-SIA-Fe/image_1.dat
+    read_data  ../systems/EAM-EAM-SIA-Fe/image_1.dat
     pair_style    eam/fs
-    pair_coeff * * ../systems/EAM-SIA-Fe/Fe.eam.fs Fe
+    pair_coeff * * ../systems/EAM-EAM-SIA-Fe/Fe.eam.fs Fe
     run 0
     thermo 10
     run 0

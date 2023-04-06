@@ -3,7 +3,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**","${HOME}/.local/include"
+                "${workspaceFolder}/**",
+                "${PREFIX}/include"
             ],
             "defines": [],
             "macFrameworkPath": [
@@ -12,7 +13,8 @@
             "compilerPath": "${HOME}/opt/miniconda3/envs/mpi/bin/mpic++",
             "cStandard": "c17",
             "cppStandard": "c++14",
-            "intelliSenseMode": "macos-clang-arm64"
+            "intelliSenseMode": "macos-clang-arm64",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4
