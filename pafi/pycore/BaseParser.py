@@ -6,15 +6,14 @@ import numpy as np
 from typing import Union,Any
 ScriptArg = Union[int,float,str]
 
-
-class Parameters:
+class BaseParser:
     """
-        All parameters for a PAFI run,
-        read from an XML file
+        Parameters for a PAFI run,
+        read from an XML file.
     """
     
     def __init__(self,xml_path:str) -> None:
-        self.default_setup()
+        self.default_parameters()
         self.default_axes()
         self.default_pathway()
         self.default_scripts()
@@ -25,27 +24,28 @@ class Parameters:
         for branch in xml_file.getroot():
             if branch.tag=="Axes":
                 self.read_axes(branch)
-            elif branch.tag=="Setup":
-                self.read_setup(branch)
+            elif branch.tag=="Parameters":
+                self.read_parameters(branch)
             elif branch.tag=="PathwayConfigurations":
                 self.read_pathway(branch)
             elif branch.tag=="Scripts":
                 self.read_scripts(branch)
             else:
                 raise ValueError("Error in XML file!")
-        
-        # initial seed, but must be different across workers...
-        self.rng = np.random.default_rng(self.setup['GlobalSeed'])
-        self.seeded=False
-        df = self.setup["DumpFolder"]
-        if not os.path.isdir(df):
-            raise IOError(f"DumpFolder {df} cannot be found!")
+        self.check_output()
+
+    def check_output(self)->None:
+        """
+            Ensure DumpFolder exists and determine suffix
+        """
+        # dump data
+        df = self.parameters["DumpFolder"]
+        self.found_output_dir = os.path.isdir(df)
+        if not self.found_output_dir:
+            print(f"WARNING: DumpFolder {df} cannot be found!")
         else:
             self.suffix=0
             self.find_suffix_and_write()
-
-        
-
     
     def default_axes(self) -> None:
         """
@@ -68,69 +68,76 @@ class Parameters:
             else:
                 self.axes[axis.tag] = np.array([float(d) for d in data])
 
-    def default_setup(self) -> None:
+    def default_parameters(self) -> None:
         """
-            Default values for "Setup" of XML
+            Default values for "Parameters" of XML
             Will ONLY read in values that appear here first!
         """
-        self.setup = {}
-        self.setup["CoresPerWorker"] = 1
-        self.setup["WriteDev"] = 0
-        self.setup["Verbosity"] = 0
-        self.setup["SampleSteps"] = 2000
-        self.setup["ThermSteps"] = 1000
-        self.setup["MinSteps"] = 1000
-        self.setup["nRepeats"] = 1
-        self.setup["DumpFolder"] = './dumps'
-        self.setup["OverDamped"] = False
-        self.setup["Friction"] = 0.05
-        self.setup["LogLammps"] = False
-        self.setup["MaxJump"] = 0.4
-        self.setup["ReSampleThresh"] = 0.5
-        self.setup["maxExtraRepeats"] = 1
-        self.setup["PostDump"] = False
-        self.setup["PreMin"] = True
-        self.setup["SplinePath"] = True
-        self.setup["RealMEPDist"] = True
-        self.setup["GlobalSeed"] = 137
-        self.setup["FreshSeed"] = True
-        self.setup["ReDiscretize"] = True
-        self.setup["LinearThermalExpansion"] = [0.,0.,0.]
-        self.setup["QuadraticThermalExpansion"] = [0.,0.,0.]
+        self.parameters = {}
+        self.parameters["CoresPerWorker"] = 1
+        self.parameters["WriteDev"] = 0
+        self.parameters["Verbosity"] = 0
+        self.parameters["SampleSteps"] = 2000
+        self.parameters["ThermSteps"] = 1000
+        self.parameters["MinSteps"] = 1000
+        self.parameters["nRepeats"] = 1
+        self.parameters["DumpFolder"] = './dumps'
+        self.parameters["OverDamped"] = False
+        self.parameters["Friction"] = 0.05
+        self.parameters["LogLammps"] = False
+        self.parameters["MaxJump"] = 0.4
+        self.parameters["ReSampleThresh"] = 0.5
+        self.parameters["maxExtraRepeats"] = 1
+        self.parameters["PostDump"] = False
+        self.parameters["PreMin"] = True
+        self.parameters["SplinePath"] = True
+        self.parameters["RealMEPDist"] = True
+        self.parameters["GlobalSeed"] = 137
+        self.parameters["FreshSeed"] = True
+        self.parameters["ReDiscretize"] = True
+        self.parameters["LinearThermalExpansion"] = np.zeros(3)
+        self.parameters["QuadraticThermalExpansion"] = np.zeros(3)
+        self.parameters["CubicSplineBoundaryConditions"] = "clamped"
     
-    def read_setup(self,xml_setup) -> None:
+    def read_parameters(self,xml_parameters) -> None:
         """
-            Read values for "Setup" of XML
+            Read values for "Parameters" of XML
         """
-        for var in xml_setup:
+        for var in xml_parameters:
             tag = var.tag.strip()
-            if not tag in self.setup:
+            if not tag in self.parameters:
                 print(f"Undefined parameter {tag}, skipping")
                 continue
             else:
-                o = self.setup[tag]
+                o = self.parameters[tag]
                 n = var.text
                 if isinstance(o,int):
-                    self.setup[tag] = int(n)
+                    self.parameters[tag] = int(n)
                 elif isinstance(o,float):
-                    self.setup[tag] = float(n)
+                    self.parameters[tag] = float(n)
                 elif isinstance(o,bool):
-                    self.setup[tag] = bool(n)
+                    self.parameters[tag] = bool(n)
                 elif isinstance(o,str):
-                    self.setup[tag] = n
+                    self.parameters[tag] = n
                 elif isinstance(o,list):
-                    if isinstance(n,float):
-                        self.setup[tag] = [float(n)] * 3
+                    self.paramaters[tag] = n
+                elif isinstance(o,np.ndarray):
+                    nn = np.array(n.strip().split(" "))
+                    if "Expansion" in tag:
+                        if nn.size == 1:
+                            self.parameters[tag] = np.ones(3)*n
+                        elif nn.size==3:
+                            self.parameters[tag] = nn.copy()
+                        else:
+                            print(f"Error in Expansion parameters")
                     else:
-                        nn = n.strip().split(" ")
-                        assert len(nn)==3
-                        self.setup[tag] = [float(_n) for _n in nn]
+                        self.parameters[tag] = nn.copy()
+        
     def __call__(self,key:str,value=None) -> Any:
-        if not key in self.setup:
+        if not key in self.parameters:
             print(f"Key {key} not found, setting as {value}")
-            self.setup[key] = value
-        return self.setup[key]
-
+            self.parameters[key] = value
+        return self.parameters[key]
 
     def default_pathway(self) -> None:
         self.PathwayConfigurations = [
@@ -144,9 +151,10 @@ class Parameters:
             "./image_8.dat",
             "./image_9.dat"
         ]
+    
     def read_pathway(self,xml_pathway) -> None:
-        self.PathwayConfigurations = xml_pathway.text.strip().split()
-        print("\n\tPAFI Checking for files:")
+        pc = xml_pathway.text.strip().splitlines()
+        self.PathwayConfigurations = [p.strip() for p in pc]
         count=0
         total=len(self.PathwayConfigurations)
         for p in self.PathwayConfigurations:
@@ -154,7 +162,8 @@ class Parameters:
                 print("\t\tWARNING! Could not find file",p)
             else:
                 count+=1
-        print(f"\n\tFound {count}/{total} pathway configurations..\n\n")
+        if count!=total:
+            print(f"\n\tFound only {count}/{total} pathway configurations!\n\n")
     
     def default_scripts(self) -> None:
         self.scripts={}
@@ -181,11 +190,11 @@ class Parameters:
             else:
                 self.scripts[tag] = script.text.strip()
     
-    def write(self,xml_file:str)->None:
+    def as_Element(self) -> ET.Element:
         """
-            Write to file
+            Cast all parameters as ElementTree
         """
-        xml = ET.Element("Parameters")
+        xmlET = ET.Element("PAFI")
         def add_branch(key,data):
             branch = ET.Element(key)
             for key, val in data.items():
@@ -201,15 +210,37 @@ class Parameters:
                 else:
                     child.text = str(val)
                 branch.append(child)
-            xml.append(branch)
+            xmlET.append(branch)
         add_branch('Axes',self.axes)
-        add_branch('Setup',self.setup)
+        add_branch('Parameters',self.parameters)
         add_branch('Scripts',self.scripts)
-        xml = ET.ElementTree(xml)
-        ET.indent(xml, '  ')
-        xml.write(xml_file,encoding="utf-8", xml_declaration=True)
         
+        # pathway
+        branch = ET.Element("PathwayConfigurations")
+        branch.text = ""
+        for p in self.PathwayConfigurations:
+            branch.text += p + "\n"
+        xmlET.append(branch)
+        
+        return xmlET
+
+    def to_string(self) -> str:
+        """
+            return as string
+        """
+        Element = self.as_Element()
+        ET.indent(Element, '  ')
+        return str(ET.tostring(Element)).replace('\\n','\n')
     
+    def to_xml_file(self,xml_file:str)->None:
+        """
+            Write to file
+        """
+        Element = self.as_Element()
+        ElementTree = ET.ElementTree(Element)
+        ET.indent(ElementTree, '  ')
+        ElementTree.write(xml_file,encoding="utf-8", xml_declaration=True)
+        
     def replace(self,field:str,key:str,value: ScriptArg) -> str:
         """
             Simple replacement
@@ -229,27 +260,8 @@ class Parameters:
         for key,value in arguments.items():
             script = self.replace(script,key,value)
         return script
-        
-    def seed(self,worker_instance):
-        """
-            Generate random number seed- why is this here...
-        """
-        self.seed = self.setup["GlobalSeed"] * (worker_instance+1)
-        self.rng = np.random.default_rng(self.seed)
-        self.rng_int = self.rng.integers(low=100, high=10000)
-        self.seeded=True
     
-    def seed_str(self):
-        """
-            Gives exactly the same seed each time unless reseed=True
-        """
-        if not self.seeded:
-            print("NOT SEEDED!!")
-        
-        if self.setup["FreshSeed"]:
-            self.rng_int = self.rng.integers(low=100, high=10000)
-        return str(self.rng_int)
-        
+    
     def welcome_message(self):
         """
             Pointless :)
@@ -291,7 +303,7 @@ class Parameters:
         welcome += """
         Parameters:
         """
-        for key,val in self.setup:
+        for key,val in self.parameters:
             welcome += f"""
                 {key}:
                     {val}
@@ -302,14 +314,14 @@ class Parameters:
         """
             Ugly implementation to check for duplicates..
         """
-        fl = glob.glob(os.path.join(self.setup["DumpFolder"],"config_*.xml"))
+        fl = glob.glob(os.path.join(self.parameters["DumpFolder"],"config_*.xml"))
         for f in fl:
             suffix = int(f.split("_")[-1][:-4])
             self.suffix = max(self.suffix,suffix)
         if self.suffix>0:
             self.suffix += 1
-        xml_file = os.path.join(self.setup["DumpFolder"],f"config_{self.suffix}.xml")
-        self.write(xml_file=xml_file)
+        xml_file = os.path.join(self.parameters["DumpFolder"],f"config_{self.suffix}.xml")
+        self.to_xml_file(xml_file=xml_file)
             
 
 

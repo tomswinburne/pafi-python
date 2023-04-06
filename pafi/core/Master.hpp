@@ -90,7 +90,7 @@ void run(MPI_Comm &world,std::string parser_file) {
   int error_count,total_error_count;
   // see GlobalSeed
   parser.seed(instance);
-  
+
   // set up data gatherer
   GathererTemplate g(parser,nWorkers,dump_index,rank);
   MPI_Bcast(&(g.initialized),1,MPI_INT,0,world);
@@ -122,8 +122,8 @@ void run(MPI_Comm &world,std::string parser_file) {
 
   // ******************* SET UP WORKERS ****************************************
 
-
   // ********************** SAMPLING *******************************************
+
 
   // generic - deviation
   const int vsize = 3 * sim.natoms;
@@ -140,7 +140,6 @@ void run(MPI_Comm &world,std::string parser_file) {
                       "with "<<parser.CoresPerWorker<<" cores per worker\n\n";
     std::cout<<"<> == time averages,  av/err over ensemble"<<std::endl;
   }
-
 
   g.screen_output_header();
 
@@ -178,7 +177,6 @@ void run(MPI_Comm &world,std::string parser_file) {
       if(valid[0]==0) for(i=0;i<vsize;i++) dev[i] = 0.0;
       if(MPI_COMM_NULL != ensemble_comm)
         MPI_Reduce(dev,dev+vsize,vsize,MPI_DOUBLE,MPI_SUM,0,ensemble_comm);
-
       g.prepare(sim.results); // allocate memory if not already done
       if(MPI_COMM_NULL != ensemble_comm)
         MPI_Gather(g.data,g.dsize,MPI_DOUBLE,g.all_data,g.dsize,MPI_DOUBLE,0,ensemble_comm);

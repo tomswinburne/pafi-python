@@ -1,7 +1,7 @@
 <!-- 
 DEFAULT PARAMETERS FOR PAFI
 -->
-<Parameters>
+<PAFI>
   <Axes>
     <!--
       Axes for sampling. 
@@ -18,7 +18,7 @@ DEFAULT PARAMETERS FOR PAFI
     <Temperature>0 100. 500. 1300.</Temperature>
   </Axes>
 
-  <Setup>
+  <Parameters>
     <!-- MUST include trailing forward slash -->
     <DumpFolder>./dumps/</DumpFolder>
 
@@ -85,6 +85,14 @@ DEFAULT PARAMETERS FOR PAFI
     -->
     <PreMin> 1 </PreMin>
 
+    <!-- Determine scipy.interpolate.CubicSpline boundary conditions,
+    which for PADI *must be a string*. 
+    'clamped': the first derivative is set to zero - good for minima
+    'not-a-knot': a good choice if unsure
+    For more details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.CubicSpline.html
+    -->
+    <CubicSplineBoundaryConditions>clamped</CubicSplineBoundaryConditions>
+    
     <!-- If == 0 ignore ReactionCoordinate parameter,
     sample only at provided pathway configurations. Test feature -->
     <ReDiscretize>1</ReDiscretize>
@@ -107,7 +115,7 @@ DEFAULT PARAMETERS FOR PAFI
     <!-- Spline pathway? YES -->
     <SplinePath>1</SplinePath>
 
-  </Setup>
+  </Parameters>
   <!--
     Sequential list of pathway configurations,
     produced from e.g. a NEB configuration.
@@ -151,4 +159,4 @@ DEFAULT PARAMETERS FOR PAFI
     <PostRun>
     </PostRun>
   </Scripts>
-</Parameters>
+</PAFI>

@@ -527,7 +527,6 @@ double LAMMPSSimulator::getEnergy() {
   return baseE;
 };
 
-
 double LAMMPSSimulator::getForceEnergy(double *f) {
   run_commands("run 0");
   double * lmpE = (double *) lammps_extract_compute(lmp,(char *) "pe",0,0);
@@ -571,8 +570,6 @@ void LAMMPSSimulator::constrained_average() {
   std::string cmd = "run "+parser->configuration["SampleSteps"];
   run_commands(cmd);
 };
-
-
 
 void LAMMPSSimulator::close() {
   GenericSimulator::close();
