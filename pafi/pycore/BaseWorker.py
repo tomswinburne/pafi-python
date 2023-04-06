@@ -56,7 +56,7 @@ class BaseWorker:
         # determine distance TODO: symmetric??
         if self.params("RealMEPDist"):
             self.r_dist = np.array([self.pbc_dist(X-all_X[0])] for X in all_X)
-            self.r_dist /= r_dist[-1]
+            self.r_dist /= self.r_dist[-1]
         else:
             self.r_dist = np.linspace(0.,1.,all_X.shape[0])
 
