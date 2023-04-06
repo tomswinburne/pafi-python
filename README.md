@@ -1,4 +1,8 @@
+
+<h1> PYTHON ONLY NOT DOCUEMENTED YET </h1>
+
 <img src="doc/pafi_title.png" width=500></img>
+
 <h2> PAFI: MD evaluation of free energy barriers beyond HTST</h2>
 v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License, thomas dot swinburne at cnrs.fr<br><br>
 
@@ -44,8 +48,7 @@ cd ..
 
 # PAFI build
 cd pafi/build
-cmake ..
-make 
+pip install -e .
 ```
 
 ## [Detailed Installation Instructions](doc/INSTALL.md)
