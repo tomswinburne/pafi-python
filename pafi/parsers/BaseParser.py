@@ -10,22 +10,26 @@ class BaseParser:
     """
     """
     def __init__(self,xml_path:str) -> None:
-        """_summary_
+        """Read PAFI XML file
 
         Parameters
         ----------
         xml_path : str
-            _description_
+            path to XML file
+        
+        Methods
+        ----------
+
 
         Raises
         ------
-        ValueError
-            _description_
+        IOError
+            If path is not found
         """
-        self.default_parameters()
-        self.default_axes()
-        self.default_pathway()
-        self.default_scripts()
+        self.set_default_parameters()
+        self.set_default_axes()
+        self.set_default_pathway()
+        self.set_default_scripts()
         
         self.xml_path = xml_path
         assert os.path.exists(xml_path)
@@ -41,13 +45,13 @@ class BaseParser:
             elif branch.tag=="Scripts":
                 self.read_scripts(branch)
             else:
-                raise ValueError("Error in XML file!")
+                raise IOError("Error in XML file!")
         self.check_axes()
         self.check_output_location()
 
     def check_axes(self)->None:
         """
-            Ensure 
+            Ensure we have minimal axes for PAFI
         """
         assert "ReactionCoordinate" in self.axes.keys()
         assert "Temperature" in self.axes.keys()
@@ -68,34 +72,46 @@ class BaseParser:
             self.suffix=0
             self.find_suffix_and_write()
     
-    def default_axes(self,clear=True) -> None:
-        """_summary_
+    def set_default_axes(self,empty=True) -> None:
+        """Set defaults for "Axes" attribute
 
         Parameters
         ----------
-        clear : bool, optional
-            do not set any, by default True
+        empty : bool, optional, by default True
+            If True, we leave this blank to allow the
+            configuration file to set axis order
         """
         self.axes = {}
+        if not empty:
+            self.axes["Temperature"] = np.zeros(1)
+            self.axes["ReactionCoordinate"] = np.linspace(0.0,1.0,9)
+
         
         
     def read_axes(self,xml_axes:ET.Element) -> None:
-        """
-            Read "Axes" of XML file
-            If in form min max int, make an array
-            Else, just cast as an array
+        """Read "Axes" of XML file
+            If data is in form `min max nsteps`, use `np.linspace`. 
+            Otherwise, cast as `np.array`
+        
+        Parameters
+        ----------
+        xml_axes : xml.etree.ElementTreeElement
+            Relevant branch of XML, as ElementTree Element
         """
         for axis in xml_axes:
-            data = axis.text.strip().split(" ")
-            if len(data)==3 and data[2].isdigit() and int(data[2])>1:				
-                self.axes[axis.tag] = np.linspace(float(data[0]),float(data[1]),int(data[2]))
+            data = np.fromstring(axis.text.strip(),sep=' ')
+            # check for form min max nsteps
+            min_max_form = data.size==3 and data[0]<data[1]
+            min_max_form *= int(data[2])>1 and int(data[2])<20
+            if min_max_form:
+                self.axes[axis.tag] = np.linspace(data[0],data[1],int(data[2]))
             else:
-                self.axes[axis.tag] = np.array([float(d) for d in data])
+                self.axes[axis.tag] = data.copy()
+
 
     def set_default_parameters(self) -> None:
-        """
-            Set default simulation parameters for PAFI
-            read_parameters() will *only* overwrite these values
+        """Set default values for <Parameters> data
+        read_parameters() will *only* overwrite these values
         """
         self.parameters = {}
         self.parameters["CoresPerWorker"] = 1
@@ -130,7 +146,7 @@ class BaseParser:
 
         Parameters
         ----------
-        xml_parameters : ET.Element
+        xml_parameters : xml.etree.ElementTreeElement
             The <Parameters> branch of the configuration file,
             represented as an ElementTree Element
         
@@ -166,13 +182,30 @@ class BaseParser:
                     else:
                         self.parameters[tag] = nn.copy()
         
-    def __call__(self,key:str,value=None) -> Any:
+    def __call__(self,key:str,value:Any=None) -> Any:
+        """Extract or set the <Parameters> branch of the 
+        PAFI configuration
+
+        Parameters
+        ----------
+        key : str
+            Field name of <Parameters>
+        value : Any, optional
+            if not None and key not found, set (key,value) pair, by default None
+
+        Returns
+        -------
+        Any
+            The value of the parameter
+        """
         if not key in self.parameters:
             print(f"Key {key} not found, setting as {value}")
             self.parameters[key] = value
         return self.parameters[key]
 
-    def default_pathway(self) -> None:
+    def set_default_pathway(self) -> None:
+        """Set default values for the <PathwayConfigurations> branch
+        """
         self.PathwayConfigurations = [
             "./image_1.dat",
             "./image_2.dat",
@@ -186,6 +219,15 @@ class BaseParser:
         ]
     
     def read_pathway(self,xml_pathway) -> None:
+        """Read in pathway configuration paths defined in the XML file 
+
+        Parameters
+        ----------
+        xml_parameters : xml.etree.ElementTreeElement
+            The <PathwayConfigurations> branch of the configuration file,
+            represented as an ElementTree Element
+        
+        """
         pc = xml_pathway.text.strip().splitlines()
         self.PathwayConfigurations = [p.strip() for p in pc]
         count=0
@@ -198,7 +240,9 @@ class BaseParser:
         if count!=total:
             print(f"\n\tFound only {count}/{total} pathway configurations!\n\n")
     
-    def default_scripts(self) -> None:
+    def set_default_scripts(self) -> None:
+        """Set default values for the <Scripts> branch
+        """
         self.scripts={}
         self.scripts["Input"] = """
             units metal
@@ -216,6 +260,15 @@ class BaseParser:
         self.scripts["PreTherm"] = """"""
     
     def read_scripts(self,xml_scripts) -> None:
+        """Read in scripts defined in the XML file 
+
+        Parameters
+        ----------
+        xml_parameters : xml.etree.ElementTreeElement
+            The <Scripts> branch of the configuration file,
+            represented as an ElementTree Element
+        
+        """
         for script in xml_scripts:
             tag = script.tag.strip()
             if not tag in self.scripts:
@@ -225,7 +278,7 @@ class BaseParser:
     
     def as_Element(self) -> ET.Element:
         """
-            Cast all parameters as ElementTree
+            Cast all parameters as xml.etree.ElementTreeElement
         """
         xmlET = ET.Element("PAFI")
         def add_branch(key,data):
@@ -265,8 +318,12 @@ class BaseParser:
         return str(ET.tostring(Element)).replace('\\n','\n')
     
     def to_xml_file(self,xml_file:str)->None:
-        """
-            Write all paramaters as XML file
+        """Write all paramaters as XML file
+        
+        Parameters
+        ----------
+        xml_file : str
+            path to XML file
         """
         Element = self.as_Element()
         ElementTree = ET.ElementTree(Element)
@@ -274,17 +331,39 @@ class BaseParser:
         ElementTree.write(xml_file,encoding="utf-8", xml_declaration=True)
         
     def replace(self,field:str,key:str,value: ScriptArg) -> str:
-        """
-            Wrapper around string replace()
-            field 
+        """Wrapper around string replace()
+           
+        Parameters
+        ----------
+        field : str
+            string to be searched
+        key : str
+            will search for %key%
+        value : ScriptArg
+            replacement value
+        Returns
+        -------
+        str
+            the string with replaced values
         """
         return field.replace("%"+key+"%",str(value))
     
-    def parse_script(self,script_key,arguments:None|dict=None) -> str:
-        """
-            Parse an input script
+    def parse_script(self,script_key:str,arguments:None|dict=None) -> str:
+        """Parse an input script
             If script_key is not a key of self.scripts, it 
             it is treated as a script itself
+
+        Parameters
+        ----------
+        script_key : str
+            key for <Script> in XML file
+        arguments : None | dict, optional
+            Dictionary of key,value pairs for replace(), by default None
+
+        Returns
+        -------
+        str
+            The script with any keywords replaced
         """
         if not script_key in self.scripts:
             script = script_key
@@ -298,7 +377,7 @@ class BaseParser:
     
     def welcome_message(self):
         """
-            Pointless :)
+            A friendly welcome message :)
         """
         welcome = """
          _______      _______      _______       _________
@@ -345,7 +424,8 @@ class BaseParser:
     
     def find_suffix_and_write(self)->None:
         """
-            Ugly implementation to check for duplicates..
+            Search output directory to find unique suffix
+            for XML file log and CSV output data
         """
         df = self.parameters["DumpFolder"]
         fl = glob.glob(os.path.join(df,"config_*.xml"))
@@ -354,9 +434,7 @@ class BaseParser:
             suffix = int(f.split("_")[-1][:-4])
             self.suffix = max(self.suffix,suffix)
         self.suffix += 1
-
         xml_file = os.path.join(df,f"config_{self.suffix}.xml")
-
         self.to_xml_file(xml_file=xml_file)
             
 

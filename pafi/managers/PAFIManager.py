@@ -2,11 +2,11 @@ import itertools
 import numpy as np
 from mpi4py import MPI
 from typing import TypeVar, Generic, Any
-from .Parser import Parser
-from .ResultsHolder import ResultsHolder
+from ..parsers.Parser import Parser
+from ..results.ResultsHolder import ResultsHolder
 from .BaseManager import BaseManager
-from .PAFIWorker import PAFIWorker
-from .BaseGatherer import BaseGatherer
+from ..workers.PAFIWorker import PAFIWorker
+from ..results.BaseGatherer import BaseGatherer
 
 class PAFIManager(BaseManager):
     def __init__(self, world: MPI.Intracomm, xml_path: str ) -> None:

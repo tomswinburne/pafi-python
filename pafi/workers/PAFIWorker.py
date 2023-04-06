@@ -2,9 +2,9 @@ import numpy as np
 import os
 from mpi4py import MPI
 from typing import Any, List
-from .Parser import Parser
+from ..parsers.Parser import Parser
 from .LAMMPSWorker import LAMMPSWorker
-from .ResultsHolder import ResultsHolder
+from ..results.ResultsHolder import ResultsHolder
 
 class PAFIWorker(LAMMPSWorker):
     """

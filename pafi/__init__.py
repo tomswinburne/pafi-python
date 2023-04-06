@@ -1,3 +1,3 @@
-from .core.Parser import Parser
-from .core.PAFIWorker import PAFIWorker,ResultsHolder
-from .core.PAFIManager import PAFIManager
+from .parsers.Parser import Parser
+from .workers.PAFIWorker import PAFIWorker,ResultsHolder
+from .managers.PAFIManager import PAFIManager

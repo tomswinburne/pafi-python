@@ -2,7 +2,7 @@ import numpy as np
 import os
 from mpi4py import MPI
 from typing import TypeVar, Generic, Any, List
-from .Parser import Parser
+from ..parsers.Parser import Parser
 from scipy.interpolate import CubicSpline,interp1d
 
 class BaseWorker:

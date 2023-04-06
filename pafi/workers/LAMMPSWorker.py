@@ -1,12 +1,12 @@
 import numpy as np
 import os
 from typing import Any, List
-from .Parser import Parser
+from ..parsers.Parser import Parser
 from mpi4py import MPI
 from lammps import lammps, MPIAbortException,LMP_STYLE_GLOBAL,LMP_TYPE_VECTOR,LMP_TYPE_SCALAR
         
 from .BaseWorker import BaseWorker
-from .ResultsHolder import ResultsHolder
+from ..results.ResultsHolder import ResultsHolder
 
 class LAMMPSWorker(BaseWorker):
     """
