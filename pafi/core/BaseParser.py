@@ -8,11 +8,20 @@ ScriptArg = Union[int,float,str]
 
 class BaseParser:
     """
-        Parameters for a PAFI run,
-        read from an XML file.
     """
-    
     def __init__(self,xml_path:str) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        xml_path : str
+            _description_
+
+        Raises
+        ------
+        ValueError
+            _description_
+        """
         self.default_parameters()
         self.default_axes()
         self.default_pathway()
@@ -21,6 +30,7 @@ class BaseParser:
         self.xml_path = xml_path
         assert os.path.exists(xml_path)
         xml_file = ET.parse(xml_path)
+
         for branch in xml_file.getroot():
             if branch.tag=="Axes":
                 self.read_axes(branch)
@@ -37,7 +47,7 @@ class BaseParser:
 
     def check_axes(self)->None:
         """
-            We need at least these...
+            Ensure 
         """
         assert "ReactionCoordinate" in self.axes.keys()
         assert "Temperature" in self.axes.keys()
@@ -58,12 +68,16 @@ class BaseParser:
             self.suffix=0
             self.find_suffix_and_write()
     
-    def default_axes(self) -> None:
-        """
-            Default value for "Axes" of XML
-            We don't set any thing as we want to set order in config file?
+    def default_axes(self,clear=True) -> None:
+        """_summary_
+
+        Parameters
+        ----------
+        clear : bool, optional
+            do not set any, by default True
         """
         self.axes = {}
+        
         
     def read_axes(self,xml_axes:ET.Element) -> None:
         """
@@ -78,10 +92,10 @@ class BaseParser:
             else:
                 self.axes[axis.tag] = np.array([float(d) for d in data])
 
-    def default_parameters(self) -> None:
+    def set_default_parameters(self) -> None:
         """
-            Default values for "Parameters" of XML
-            Will ONLY read in values that appear here first!
+            Set default simulation parameters for PAFI
+            read_parameters() will *only* overwrite these values
         """
         self.parameters = {}
         self.parameters["CoresPerWorker"] = 1
@@ -112,8 +126,14 @@ class BaseParser:
         self.parameters["CubicSplineBoundaryConditions"] = "clamped"
     
     def read_parameters(self,xml_parameters:ET.Element) -> None:
-        """
-            Read values for "Parameters" of XML
+        """Read in simulation parameters defined in the XML file 
+
+        Parameters
+        ----------
+        xml_parameters : ET.Element
+            The <Parameters> branch of the configuration file,
+            represented as an ElementTree Element
+        
         """
         for var in xml_parameters:
             tag = var.tag.strip()
@@ -184,7 +204,7 @@ class BaseParser:
             units metal
             atom_style atomic
             atom_modify map array sort 0 0.0
-            read_data  %FirstPathImage%
+            read_data  ./image_1.dat
             pair_style    eam/fs
             pair_coeff * * ./Fe.eam.fs Fe
             run 0
@@ -228,7 +248,6 @@ class BaseParser:
         add_branch('Parameters',self.parameters)
         add_branch('Scripts',self.scripts)
         
-        # pathway
         branch = ET.Element("PathwayConfigurations")
         branch.text = ""
         for p in self.PathwayConfigurations:
@@ -239,7 +258,7 @@ class BaseParser:
 
     def to_string(self) -> str:
         """
-            return as string
+            Return all paramaters as XML string
         """
         Element = self.as_Element()
         ET.indent(Element, '  ')
@@ -247,7 +266,7 @@ class BaseParser:
     
     def to_xml_file(self,xml_file:str)->None:
         """
-            Write to file
+            Write all paramaters as XML file
         """
         Element = self.as_Element()
         ElementTree = ET.ElementTree(Element)
@@ -256,7 +275,8 @@ class BaseParser:
         
     def replace(self,field:str,key:str,value: ScriptArg) -> str:
         """
-            Simple replacement
+            Wrapper around string replace()
+            field 
         """
         return field.replace("%"+key+"%",str(value))
     
@@ -327,13 +347,16 @@ class BaseParser:
         """
             Ugly implementation to check for duplicates..
         """
-        fl = glob.glob(os.path.join(self.parameters["DumpFolder"],"config_*.xml"))
+        df = self.parameters["DumpFolder"]
+        fl = glob.glob(os.path.join(df,"config_*.xml"))
         self.suffix=-1
         for f in fl:
             suffix = int(f.split("_")[-1][:-4])
             self.suffix = max(self.suffix,suffix)
         self.suffix += 1
-        xml_file = os.path.join(self.parameters["DumpFolder"],f"config_{self.suffix}.xml")
+
+        xml_file = os.path.join(df,f"config_{self.suffix}.xml")
+
         self.to_xml_file(xml_file=xml_file)
             
 
