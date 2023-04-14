@@ -2,10 +2,11 @@
 
 # set installation location
 set(CMAKE_INSTALL_PREFIX "$ENV{PREFIX}" CACHE BOOL "" FORCE)
-
+set(CMAKE_BUILD_PARALLEL_LEVEL 4) 
 #set(Python_FIND_FRAMEWORK LAST)
 
-find_package(Python 3.11 EXACT REQUIRED)
+#find_package(Python 3.11 EXACT REQUIRED)
+set(PYTHON_EXECUTABLE /Users/ts/opt/miniconda3/envs/mpi/bin/python CACHE BOOL "" FORCE) 
 
 # enforce c++11 standards
 set(CCFLAGS -g -O3 -std=c++11)

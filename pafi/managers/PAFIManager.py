@@ -5,14 +5,14 @@ import os
 from mpi4py import MPI
 from ..results.ResultsHolder import ResultsHolder
 from .BaseManager import BaseManager
-from ..parsers.Parser import Parser
+from ..parsers.PAFIParser import PAFIParser
 from ..workers.PAFIWorker import PAFIWorker
 from ..results.Gatherer import Gatherer
 
 class PAFIManager(BaseManager):
     def __init__(self, world: MPI.Intracomm, 
                  xml_path:None|os.PathLike[str]=None,
-                 params:None|Parser=None,
+                 params:None|PAFIParser=None,
                  Worker:PAFIWorker=PAFIWorker,
                  Gatherer:Gatherer=Gatherer) -> None:
         """Default manager of PAFI, child of BaseManager
@@ -23,8 +23,8 @@ class PAFIManager(BaseManager):
             MPI communicator
         xml_path : None or os.PathLike[str]
             path to XML configuration file
-        params : None or Parser object
-            preloaded Parser object, 
+        params : None or PAFIParser object
+            preloaded PAFIParser object, 
         Worker : PAFIWorker, optional,
             Can be overwritten by child class, by default PAFIWorker
         Gatherer : Gatherer, optional
@@ -34,7 +34,7 @@ class PAFIManager(BaseManager):
         
         assert (not params is None) or (not xml_path is None)
         if params is None:
-            params = Parser(xml_path=xml_path)
+            params = PAFIParser(xml_path=xml_path)
         super().__init__(world, params, Worker, Gatherer)
         
     

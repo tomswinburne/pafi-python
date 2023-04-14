@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from mpi4py import MPI
-from ..parsers.Parser import Parser
+from ..parsers.PAFIParser import PAFIParser
 from scipy.interpolate import CubicSpline
 
 class BaseWorker:
@@ -11,13 +11,13 @@ class BaseWorker:
         ----------
         comm : MPI.Intracomm
             MPI communicator
-        params : Parser
-            Predefined or custom PAFI Parser object
+        params : PAFIParser
+            Predefined or custom  PAFIParser object
         worker_instance : int
             unique worker rank
         """
     def __init__(self, comm : MPI.Intracomm,
-                 params:Parser,worker_instance:int) -> None:
+                 params:PAFIParser,worker_instance:int) -> None:
         self.worker_instance = worker_instance
         self.comm = comm
         self.local_rank = comm.Get_rank()

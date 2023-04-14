@@ -120,22 +120,30 @@ DEFAULT PARAMETERS FOR PAFI
     <SplinePath>1</SplinePath>
 
   </Parameters>
+  
   <!--
     Sequential list of pathway configurations,
     produced from e.g. a NEB configuration.
     Loaded via LAMMPS read_data (see Scripts/Input below)
+    <Directory> can be omitted if using full paths in Files.
   -->
   <PathwayConfigurations>
-    ../examples/systems/EAM-EAM-SIA-Fe/image_1.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_2.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_3.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_4.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_5.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_6.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_7.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_8.dat
-    ../examples/systems/EAM-EAM-SIA-Fe/image_9.dat
+    <Directory>
+    ../examples/systems/EAM-EAM-SIA-Fe/
+    </Directory>
+    <Files>
+      image_1.dat
+      image_2.dat
+      image_3.dat
+      image_4.dat
+      image_5.dat
+      image_6.dat
+      image_7.dat
+      image_8.dat
+      image_9.dat
+    </Files>
   </PathwayConfigurations>
+
   <Scripts>
     
     <!-- LAMMPS script to read in the first pathway

@@ -2,7 +2,7 @@ import numpy as np
 import os
 from mpi4py import MPI
 from typing import Any, List
-from ..parsers.Parser import Parser
+from ..parsers.PAFIParser import PAFIParser
 from .LAMMPSWorker import LAMMPSWorker
 from ..results.ResultsHolder import ResultsHolder
 
@@ -37,7 +37,7 @@ class PAFIWorker(LAMMPSWorker):
         any form of hyperplane-constrained averaging.
         """
     
-    def __init__(self, comm: MPI.Intracomm, params: Parser, tag: int) -> None:
+    def __init__(self, comm: MPI.Intracomm, params: PAFIParser, tag: int) -> None:
         super().__init__(comm, params, tag)
     
     def constrained_average(self,results:ResultsHolder)->ResultsHolder:

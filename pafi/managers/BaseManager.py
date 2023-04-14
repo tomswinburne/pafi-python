@@ -1,5 +1,5 @@
 from mpi4py import MPI
-from ..parsers.Parser import BaseParser
+from ..parsers.PAFIParser import BaseParser
 from ..workers.BaseWorker import BaseWorker
 from ..results.BaseGatherer import BaseGatherer
 
@@ -10,7 +10,7 @@ class BaseManager:
         ----------
         world : MPI.Intracomm
             MPI communicator
-        parser : PAFI Parser object 
+        parser : BaseParser object 
             A BaseParser or inherited class instance
         Worker : Worker class
             a predefined or custom Worker classes, default BaseWorker

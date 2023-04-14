@@ -36,7 +36,7 @@ class BaseParser:
         self.xml_path = xml_path
         assert os.path.exists(xml_path)
         xml_file = ET.parse(xml_path)
-
+        self.PotentialLocation = None
         for branch in xml_file.getroot():
             if branch.tag=="Axes":
                 self.read_axes(branch)
@@ -209,30 +209,59 @@ class BaseParser:
     def set_default_pathway(self) -> None:
         """Set default values for the <PathwayConfigurations> branch
         """
-        self.PathwayConfigurations = [
-            "./image_1.dat",
-            "./image_2.dat",
-            "./image_3.dat",
-            "./image_4.dat",
-            "./image_5.dat",
-            "./image_6.dat",
-            "./image_7.dat",
-            "./image_8.dat",
-            "./image_9.dat"
+        self.PathwayDirectory = "./"
+        self.PathwayFiles = [
+            "image_1.dat",
+            "image_2.dat",
+            "image_3.dat",
+            "image_4.dat",
+            "image_5.dat",
+            "image_6.dat",
+            "image_7.dat",
+            "image_8.dat",
+            "image_9.dat"
         ]
+        self.PathwayConfigurations = []
+        
+        dir = self.PathwayDirectory
+        for f in self.PathwayFiles:
+            self.PathwayConfigurations += [os.path.join(dir,f)]
     
-    def read_pathway(self,xml_pathway) -> None:
+    def read_pathway(self,xml_path_data:ET.ElementTree) -> None:
         """Read in pathway configuration paths defined in the XML file 
 
         Parameters
         ----------
-        xml_parameters : xml.etree.ElementTreeElement
+        xml_path_data : xml.etree.ElementTreeElement
             The <PathwayConfigurations> branch of the configuration file,
             represented as an ElementTree Element
-        
         """
-        pc = xml_pathway.text.strip().splitlines()
-        self.PathwayConfigurations = [p.strip() for p in pc]
+        for path_data in xml_path_data:
+            tag = path_data.tag.strip()
+            if tag=="Potential":
+                if os.path.exists(path_data.text.strip()):
+                    self.PotentialLocation = path_data.text.strip()
+        
+        has_dir = False
+        for path_data in xml_path_data:
+            tag = path_data.tag.strip()
+            if tag=="Directory":
+                self.PathwayDirectory = path_data.text.strip()
+                has_dir = True
+        
+        for path_data in xml_path_data:
+            tag = path_data.tag.strip()
+            if tag=="Files":
+                pc = path_data.text.strip().splitlines()
+                self.PathwayFiles = [p.strip() for p in pc]
+        self.PathwayConfigurations = []
+        if has_dir:
+            dir = self.PathwayDirectory
+            for f in self.PathwayFiles:
+                self.PathwayConfigurations += [os.path.join(dir,f)]
+        else:
+            self.PathwayConfigurations += [f for f in self.PathwayFiles]
+
         count=0
         total=len(self.PathwayConfigurations)
         for p in self.PathwayConfigurations:
@@ -373,9 +402,13 @@ class BaseParser:
             script = script_key
         else:
             script = self.scripts[script_key]
-        if not arguments is None:
-            for key,value in arguments.items():
-                script = self.replace(script,key,value)
+        
+        _args = {} if arguments is None else arguments.copy()
+        _args["FirstPathConfiguration"] = self.PathwayConfigurations[0]
+        if not self.PotentialLocation is None:
+            _args["Potential"] = self.PotentialLocation
+        for key,value in _args.items():
+            script = self.replace(script,key,value)
         return script
     
     
@@ -440,7 +473,10 @@ class BaseParser:
         self.suffix += 1
         xml_file = os.path.join(df,f"config_{self.suffix}.xml")
         self.csv_file = os.path.join(df,f"pafi_data_{self.suffix}.csv")
-        print(self.csv_file)
+        print(f"""
+            Writing PAFI configuration to {self.csv_file}
+            """)
+
         self.to_xml_file(xml_file=xml_file)
             
 

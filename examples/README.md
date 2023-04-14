@@ -13,14 +13,13 @@ with another potential for testing thermodynamic integration:
 Run with four workers with e.g.
 ```bash
 cd examples/standard
-mpirun -np 4 ../../build/pafi
+mpirun -np 4 python StandardTest.py
 ```
 or
 ```bash
 cd examples/custom
-mpirun -np 4 ../../build/pafi-custom
+mpirun -np 4 python CustomTest.py
 ```
-
 
 - `standard` : normal PAFI routine, applied to the Fe SIA case 
 - `custom` : example TI application <b>POTENTIAL MPI ISSUE WITH MULTIPLE CORES/WORKER- NEED TO CHECK</b>

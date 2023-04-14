@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from typing import Any, List
-from ..parsers.Parser import Parser
+from ..parsers.PAFIParser import PAFIParser
 from mpi4py import MPI
 from lammps import lammps,LMP_STYLE_GLOBAL,LMP_TYPE_VECTOR,LMP_TYPE_SCALAR
 from .BaseWorker import BaseWorker
@@ -20,13 +20,13 @@ class LAMMPSWorker(BaseWorker):
         ----------
         comm : MPI.Intracomm
             MPI communicator
-        params : Parser
-            Predefined or custom PAFI Parser object
+        params : PAFIParser
+            Predefined or custom PAFIParser object
         worker_instance : int
             unique worker rank
         """
     def __init__(self, comm: MPI.Intracomm, 
-                 params: Parser, worker_instance: int) -> None:
+                 params: PAFIParser, worker_instance: int) -> None:
         super().__init__(comm, params, worker_instance)
         self.name = "LAMMPSWorker"
         self.last_error_message = ""
@@ -86,7 +86,7 @@ class LAMMPSWorker(BaseWorker):
     def run_script(self,key:str,arguments:None|dict|ResultsHolder=None)->None:
         """Run a script defined in the XML
             Important to replace any %wildcards% if they are there!
-            TODO - catch these?
+            
         Parameters
         ----------
         key : str
@@ -111,10 +111,30 @@ class LAMMPSWorker(BaseWorker):
                     print("LAMMPS ERROR:",cmd,ae)
                 self.last_error_message = ae
     
-    def gather(self,name:str,type:None|int=None,count:None|int=None):
-        """
-            Wrapper of LAMMPS gather()
-            will be ordered by ID
+    def gather(self,name:str,type:None|int=None,count:None|int=None)->np.ndarray:
+        """Wrapper of LAMMPS gather()
+           
+
+        Parameters
+        ----------
+        name : str
+            name of data
+        type : None | int, optional
+            type of array, 0:integer or 1:double, by default None.
+            If None, an attempt will be made to determine autonomously.
+        count : None | int, optional
+            number of data per atom, by default None. 
+            If None, an attempt will be made to determine autonomously.
+
+        Returns
+        -------
+        np.ndarray
+            the LAMMPS data
+
+        Raises
+        ------
+        ValueError
+            if name not found
         """
         if name in ['x','f','v'] or 'f_' in name:
             if type is None:
@@ -137,10 +157,16 @@ class LAMMPSWorker(BaseWorker):
             self.last_error_message = ae
         return np.ctypeslib.as_array(res).reshape((-1,count))
     
-    def scatter(self,name:str,data:np.ndarray):
-        """
-            Scatter data to LAMMPS
+    def scatter(self,name:str,data:np.ndarray)->None:
+        """Scatter data to LAMMPS
             Assume ordered with ID
+
+        Parameters
+        ----------
+        name : str
+            name of array
+        data : np.ndarray
+            numpy array of data. Will be flattened.
         """
         if np.issubdtype(data.dtype,int):
             type = 0
@@ -156,14 +182,18 @@ class LAMMPSWorker(BaseWorker):
             self.last_error_message = ae
     
     def get_natoms(self)->int:
-         """
-            Get the atom count
-         """
-         return self.L.get_natoms()
+        """Get the atom count
+
+        Returns
+        -------
+        int
+            the atom count
+        """
+        return self.L.get_natoms()
     
     def get_cell_data(self)->None:
         """
-            Extract supercell
+            Extract supercell information
         """
         boxlo,boxhi,xy,yz,xz,pbc,box_change = self.L.extract_box()
         self.Periodicity = np.array([bool(pbc[i]) for i in range(3)],bool)
@@ -175,8 +205,21 @@ class LAMMPSWorker(BaseWorker):
         self.Cell[1][2] = yz
         self.invCell = np.linalg.inv(self.Cell)
         self.has_cell_data = True
+        return None
 
-    def load_config(self, file_path: str) -> np.ndarray:
+    def load_config(self,file_path:os.PathLike[str])->np.ndarray:
+        """Load a LAMMPS data file with read_data() and return a numpy array of positions
+
+        Parameters
+        ----------
+        file_path : os.PathLike[str]
+            Path to the LAMMPS .dat file.
+
+        Returns
+        -------
+        np.ndarray, shape (N,3)
+            the positions
+        """
         self.made_fix = False
         self.make_compute = False
         self.run_commands(f"""
@@ -186,9 +229,13 @@ class LAMMPSWorker(BaseWorker):
         return self.gather("x",type=1,count=3)
 
     def thermal_expansion_supercell(self,T:float=0) -> None:
-        """
-            rescale the LAMMPS supercell NOT COORDINATTES
+        """Rescale the LAMMPS supercell *not coordinates*
             according to the provided thermal expansion data
+
+        Parameters
+        ----------
+        T : float, optional
+            temperature in K, by default 0
         """
         newscale = self.params.expansion(T)
         rs = newscale / self.scale
@@ -197,14 +244,21 @@ class LAMMPSWorker(BaseWorker):
             run 0""")
         self.scale = newscale.copy()
 
-    def extract_compute(self,id:str,vector:bool=True)->Any:
-        """
-            extract compute from LAMMPS
+    def extract_compute(self,id:str,vector:bool=True)->float|np.ndarray:
+        """    Extract compute from LAMMPS
+            
             id : str
-                compute id
-            vector: bool
-                is the return value a vector
+        Parameters
+        ----------
+        id : str
+            compute id
+        vector : bool, optional
+            is the return value a vector, by default True
 
+        Returns
+        -------
+        np.ndarray or float
+           return data
         """
         style = LMP_STYLE_GLOBAL
         type = LMP_TYPE_VECTOR if vector else LMP_TYPE_SCALAR
@@ -218,14 +272,21 @@ class LAMMPSWorker(BaseWorker):
             self.close()
             return None
     
-    def extract_fix(self,id:str,size:int=1)->Any:
+    def extract_fix(self,id:str,size:int=1)->float|np.ndarray:
+        """Extract fix from LAMMPS and return a numpy array
+
+        Parameters
+        ----------
+        id : str
+            name of fix
+        size : int, optional
+            number of global entries, by default 1
+        Returns
+        -------
+        float or np.ndarray
+            numpy array of data of shape (size,), or float if size=1
         """
-            extract fix from LAMMPS
-            id : str
-                fix id
-            index: int
-                return index if vector
-        """
+        
         style = LMP_STYLE_GLOBAL
         type = LMP_TYPE_VECTOR if size>1 else LMP_TYPE_SCALAR
         assert hasattr(self.L,"numpy")
@@ -243,16 +304,28 @@ class LAMMPSWorker(BaseWorker):
             return None
     
     def get_energy(self)->float:
-        """
-            Extract the potential energy
+        """Extract the potential energy
+        
+        Returns
+        -------
+        float
+            The potential energy (pe)
         """
         return self.extract_compute("thermo_pe",vector=False)
 
     def initialize_hyperplane(self,r:float,T:float)->None:
+        """Establish worker on a given plane with the 
+            reference pathway via `fix_pafi`. 
+            Also computes the tangent magnitude.
+
+        Parameters
+        ----------
+        r : float
+            The reaction coordinate, typically confined to [0,1]
+        T : float
+            The temperature in K. This will apply thermal expansion to the pathway.
         """
-            Establish worker on a given plane with the 
-            reference pathway. Returns the tangent magnitude
-        """
+        
         self.thermal_expansion_supercell(T) # updates self.scale also
 
         # check for __pafipath fix to store the path data
