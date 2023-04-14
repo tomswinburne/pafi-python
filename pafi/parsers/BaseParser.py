@@ -402,8 +402,12 @@ class BaseParser:
             script = script_key
         else:
             script = self.scripts[script_key]
-        
-        _args = {} if arguments is None else arguments.copy()
+        if arguments is None:
+            _args = {}
+        elif isinstance(arguments,ResultsHolder):
+            _args = arguments.data.copy()
+        else:
+            _args = arguments.copy()
         _args["FirstPathConfiguration"] = self.PathwayConfigurations[0]
         if not self.PotentialLocation is None:
             _args["Potential"] = self.PotentialLocation
