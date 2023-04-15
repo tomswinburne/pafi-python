@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from typing import List
 from mpi4py import MPI
 from ..parsers.PAFIParser import PAFIParser
 from scipy.interpolate import CubicSpline
@@ -11,17 +12,26 @@ class BaseWorker:
         ----------
         comm : MPI.Intracomm
             MPI communicator
-        params : PAFIParser
+        parameters : PAFIParser
             Predefined or custom  PAFIParser object
         worker_instance : int
             unique worker rank
+        rank : int
+            global rank (for MPI safety)
+        roots : List[int]
+            list of master ranks  (for MPI safety)
         """
     def __init__(self, comm : MPI.Intracomm,
-                 params:PAFIParser,worker_instance:int) -> None:
+                 parameters:PAFIParser,
+                 worker_instance:int,
+                 rank:int,
+                 roots:List[int]) -> None:
         self.worker_instance = worker_instance
         self.comm = comm
         self.local_rank = comm.Get_rank()
-        self.params = params
+        self.roots = roots
+        self.rank = rank
+        self.parameters = parameters
         self.error_count = 0
         self.scale = np.ones(3)
         self.out_width=16
@@ -35,7 +45,7 @@ class BaseWorker:
         self.Cell = None
         self.Periodicity = None
         self.invCell = None
-        self.params.seed(worker_instance)
+        self.parameters.seed(worker_instance)
     
     def load_config(self,file_path:os.PathLike[str]) -> np.ndarray:
         """Placeholder function to load in file and return configuration
@@ -107,13 +117,13 @@ class BaseWorker:
         """
 
         # load configurations
-        pc = self.params.PathwayConfigurations
+        pc = self.parameters.PathwayConfigurations
         all_X = [self.pbc(self.load_config(pc[0]),central=False)]
         for p in pc[1:]:
             all_X += [self.pbc(self.load_config(p)-all_X[0])+all_X[0]]
             
         # determine distance TODO: symmetric??
-        if self.params("RealMEPDist"):
+        if self.parameters("RealMEPDist"):
             self.r_dist = np.array([self.pbc_dist(X-all_X[0]) for X in all_X])
             self.r_dist /= self.r_dist[-1]
         else:
@@ -121,7 +131,7 @@ class BaseWorker:
 
         # splining - thank you scipy for 'axis' !!
         all_X = np.array([X.flatten() for X in all_X]) # shape=(nknots,natoms)
-        bc = self.params("CubicSplineBoundaryConditions")
+        bc = self.parameters("CubicSplineBoundaryConditions")
         assert bc in ['clamped','not-a-knot','natural']
 
         self.Spline_X = CubicSpline(self.r_dist,all_X,axis=0,bc_type=bc)

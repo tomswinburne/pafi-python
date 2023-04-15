@@ -32,8 +32,8 @@ class PAFIParser(BaseParser):
         self.seeded = False
         
         # repeats, valid bounds (see set_min_valid())
-        self.maxRepeats = self.parameters["nRepeats"]
-        self.maxRepeats += self.parameters["maxExtraRepeats"]         
+        self.nRepeats = self.parameters["nRepeats"]
+        self.maxExtraRepeats = self.parameters["maxExtraRepeats"]         
         self.set_min_valid(1) # temporary
     
     def set_min_valid(self,nWorkers:int)->None:
@@ -50,6 +50,21 @@ class PAFIParser(BaseParser):
         self.minValidResults *= self.parameters["nRepeats"]
         self.minValidResults *= nWorkers
         self.minValidResults = int(self.minValidResults)
+    def set(self,key:str,value:Any,create:bool=False)->None:
+        """Set a parameter
+
+        Parameters
+        ----------
+        key : str
+            key of parameter. Must already exist if create is `False`
+        value : Any
+            value for entry
+        create : bool, optional
+            Create new entry if true    
+        """
+        if not create:
+            assert key in self.parameters.keys()
+        self.parameters[key] = value
     
     def min_valid(self)->int:
         """Return the minimum number of value samples, 
@@ -159,8 +174,6 @@ class PAFIParser(BaseParser):
                 seeded : {self.seeded}"""
         result += f"""
                 minValidResults : {self.minValidResults}"""
-        result += f"""
-                maxRepeats : {self.maxRepeats}"""
         result += f"""
 
         """

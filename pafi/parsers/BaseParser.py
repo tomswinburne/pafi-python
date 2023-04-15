@@ -49,9 +49,24 @@ class BaseParser:
                     self.read_scripts(branch)
                 else:
                     raise IOError("Error in XML file!")
-        self.check_axes()
-        self.check_output_location()
+        self.check()
 
+    def check(self)->None:
+        """Internal check of parameters
+        """
+        if self.has_path and self.has_potential:
+            self.check_output_location()
+            self.check_axes()
+    
+    def ready(self)->bool:
+        """Check if all parameters are set
+
+        Returns
+        -------
+        bool
+        """
+        return self.has_path and self.has_potential and self.has_suffix
+    
     def check_axes(self)->None:
         """
             Ensure we have minimal axes for PAFI
@@ -136,6 +151,7 @@ class BaseParser:
         self.parameters["PostDump"] = 0
         self.parameters["PreMin"] = 1
         self.parameters["PostMin"] = 1
+        self.parameters["Verbose"] = 0
         self.parameters["SplinePath"] = 1
         self.parameters["RealMEPDist"] = 1
         self.parameters["GlobalSeed"] = 137
@@ -179,8 +195,6 @@ class BaseParser:
                         if len(_n)>0:
                             nn += [_n]
                     nn = np.array(nn)
-
-                    print(tag,nn)
                     if "Expansion" in tag:
                         try:
                             nn = nn.astype(float)
@@ -215,25 +229,49 @@ class BaseParser:
             print(f"Key {key} not found, setting as {value}")
             self.parameters[key] = value
         return self.parameters[key]
+    
+    def has_key(self,key:str)->bool:
+        """Check for parameter key
+
+        Parameters
+        ----------
+        key : str
+            key
+
+        Returns
+        -------
+        bool
+            result
+        """
+        return key in self.parameters.keys()
+    
     def set_pathway(self,
-                    paths:List[os.PathLike[str]],
+                    paths:os.PathLike[str]|List[os.PathLike[str]],
                     dir:os.PathLike[str]="./") -> None:
         """Set the PathwayConfigurations
         
         Parameters
         ----------
-        paths : List[os.PathLike[str]]
-           list of paths
+        paths : os.PathLike[str]|List[os.PathLike[str]]
+           wildcard or list of paths. 
+           For wildcard, files are ordered according to INDEX
+           assuming file format `any_form_of_path_INDEX.dat`
+
         dir : os.PathLike[str], optional
             starting path, by default "./"
         """
-        assert isinstance(paths,list)
-        self.PathwayFiles = paths
+        assert isinstance(paths,list) or isinstance(paths,str)
         assert os.path.exists(dir)
         self.PathwayDirectory = dir
+        
+        if isinstance(paths,list) and len(paths)>1:
+            paths = [os.path.join(dir.strip(),f.strip()) for f in paths]
+        else:
+            paths = paths[0] if isinstance(paths,list) else paths
+            paths = glob.glob(os.path.join(dir.strip(),paths.strip()))
+            paths = sorted(paths,key=lambda x:x.split("_")[-1])
         self.PathwayConfigurations = []
-        for f in self.PathwayFiles:
-            path = os.path.join(dir.strip(),f.strip())
+        for path in paths:
             try:
                 assert os.path.exists(path)
             except AssertionError as e:
@@ -241,6 +279,8 @@ class BaseParser:
                 raise AssertionError
             self.PathwayConfigurations += [path]
         self.has_path = True
+        self.check()
+
     
     def set_potential(self,path:os.PathLike[str])->None:
         """Set potential pathway
@@ -252,7 +292,8 @@ class BaseParser:
         """
         assert os.path.exists(path)
         self.PotentialLocation = path
-        self.has_path = True
+        self.has_potential = True
+        self.check()
 
 
     def set_default_pathway(self) -> None:
@@ -261,6 +302,7 @@ class BaseParser:
         """
         self.has_path = False
         self.has_potential = False
+        self.has_suffix = False
         
     def read_pathway(self,xml_path_data:ET.ElementTree) -> None:
         """Read in pathway configuration paths defined in the XML file 
@@ -271,6 +313,9 @@ class BaseParser:
             The <PathwayConfigurations> branch of the configuration file,
             represented as an ElementTree Element
         """
+        potential = None
+        files = "*.dat"
+        dir = "./"
         for path_data in xml_path_data:
             tag = path_data.tag.strip()
             if tag=="Potential":
@@ -279,17 +324,10 @@ class BaseParser:
                 dir = path_data.text.strip()
             if tag=="Files":
                 files = path_data.text.strip().splitlines()
+
         self.set_potential(potential)
         self.set_pathway(files,dir)
-        count=0
-        total=len(self.PathwayConfigurations)
-        for p in self.PathwayConfigurations:
-            if not os.path.exists(p):
-                print("\t\tWARNING! Could not find file",p)
-            else:
-                count+=1
-        if count!=total:
-            print(f"\n\tFound only {count}/{total} pathway configurations!\n\n")
+        
     
     def set_default_scripts(self) -> None:
         """Set default values for the <Scripts> branch
@@ -500,16 +538,14 @@ class BaseParser:
         for key,val in self.scripts.items():
             welcome += f"""
                 {key}: 
-                    {val}
-            """
+                    {val}"""
         
         welcome += """
         Parameters:
         """
         for key,val in self.parameters.items():
             welcome += f"""
-                {key}: {val}
-            """
+                {key}: {val}"""
         return welcome
     
     def find_suffix_and_write(self)->None:
@@ -517,20 +553,21 @@ class BaseParser:
             Search output directory to find unique suffix
             for XML file log and CSV output data
         """
-        df = self.parameters["DumpFolder"]
-        fl = glob.glob(os.path.join(df,"config_*.xml"))
-        self.suffix=-1
-        for f in fl:
-            suffix = int(f.split("_")[-1][:-4])
-            self.suffix = max(self.suffix,suffix)
-        self.suffix += 1
-        xml_file = os.path.join(df,f"config_{self.suffix}.xml")
-        self.csv_file = os.path.join(df,f"pafi_data_{self.suffix}.csv")
-        print(f"""
-            Writing PAFI configuration to {self.csv_file}
-            """)
-
-        self.to_xml_file(xml_file=xml_file)
+        if not self.has_suffix:
+            df = self.parameters["DumpFolder"]
+            fl = glob.glob(os.path.join(df,"config_*.xml"))
+            self.suffix=-1
+            for f in fl:
+                suffix = int(f.split("_")[-1][:-4])
+                self.suffix = max(self.suffix,suffix)
+            self.suffix += 1
+            xml_file = os.path.join(df,f"config_{self.suffix}.xml")
+            self.csv_file = os.path.join(df,f"pafi_data_{self.suffix}.csv")
+            print(f"""
+                Writing PAFI configuration to {self.csv_file}
+                """)
+            self.has_suffix=True
+            self.to_xml_file(xml_file=xml_file)
             
 
 

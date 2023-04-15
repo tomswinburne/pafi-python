@@ -15,8 +15,7 @@ DEFAULT PARAMETERS FOR PAFI
       Iteration sequence is nested, in order of appearance
     -->
     <Temperature>0.</Temperature>
-    <ReactionCoordinate>0.0 1.0 3</ReactionCoordinate>
-    <Lambda>0. 1.0 11</Lambda>
+    <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
   </Axes>
 
   <Parameters>
@@ -38,7 +37,7 @@ DEFAULT PARAMETERS FOR PAFI
     <FreshSeed>0</FreshSeed>
 
     <!-- We require nprocs % CoresPerWorker==0 -->
-    <CoresPerWorker> 2 </CoresPerWorker>
+    <CoresPerWorker> 1 </CoresPerWorker>
 
     <!-- Number of samples per plane per worker -->
     <nRepeats> 1 </nRepeats>
@@ -128,6 +127,9 @@ DEFAULT PARAMETERS FOR PAFI
     <Directory> can be omitted if using full paths in Files.
   -->
   <PathwayConfigurations>
+    <Potential>
+    ../examples/systems/EAM-EAM-SIA-Fe/Fe.eam.fs
+    </Potential>
     <Directory>
     ../examples/systems/EAM-EAM-SIA-Fe/
     </Directory>
@@ -152,12 +154,11 @@ DEFAULT PARAMETERS FOR PAFI
     
     <Input>
       units metal
-      # DUMMY %Temperature%
       atom_style atomic
       atom_modify map array sort 0 0.0
-      read_data  ../examples/systems/EAM-EAM-SIA-Fe/image_1.dat
+      read_data  %FirstPathConfiguration%
       pair_style    eam/fs
-      pair_coeff * * ../examples/systems/EAM-EAM-SIA-Fe/Fe.eam.fs Fe
+      pair_coeff * * %Potential% Fe
       run 0
       thermo 10
       run 0
@@ -180,13 +181,9 @@ DEFAULT PARAMETERS FOR PAFI
         [unfix_pafi()]
         PostRun Script
     -->
-    <PreRun>
-    </PreRun>
-    <PreTherm>
-    </PreTherm>
-    <PreTherm>
-    </PreTherm>
-    <PostRun>
-    </PostRun>
+    <PreRun/>
+    <PreTherm/>
+    <PostTherm/>
+    <PostRun/>
   </Scripts>
 </PAFI>

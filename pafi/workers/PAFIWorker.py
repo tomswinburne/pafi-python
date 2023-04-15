@@ -37,8 +37,11 @@ class PAFIWorker(LAMMPSWorker):
         any form of hyperplane-constrained averaging.
         """
     
-    def __init__(self, comm: MPI.Intracomm, params: PAFIParser, tag: int) -> None:
-        super().__init__(comm, params, tag)
+    def __init__(self, comm: MPI.Intracomm, 
+                 parameters: PAFIParser, tag: int,
+                 rank: int, roots: List[int]) -> None:
+        super().__init__(comm, parameters, tag, rank, roots)
+        
     
     def constrained_average(self,results:ResultsHolder)->ResultsHolder:
         """
@@ -47,7 +50,7 @@ class PAFIWorker(LAMMPSWorker):
         ----------
         results: ResultsHolder instance
             used to contain results and custom input paramaters
-            we want these inputs to override self.params()
+            we want these inputs to override self.parameters()
         
         Returns
         ----------
@@ -55,10 +58,11 @@ class PAFIWorker(LAMMPSWorker):
             Returns the input data and all output data appended 
             as dictionary key,value pairs
         """
-        # ensure results inputs should override self.params()
-        params = lambda k: results(k) if results.has_key(k) else self.params(k)
-        fixname = self.setup_pafi_average(params("SampleSteps"),"avepafi")
-        self.run_commands("run %d" % params("SampleSteps"))
+        # ensure results inputs should override self.parameters()
+        parameters = lambda k: results(k)\
+            if results.has_key(k) else self.parameters(k)
+        fixname = self.setup_pafi_average(parameters("SampleSteps"),"avepafi")
+        self.run_commands("run %d" % parameters("SampleSteps"))
         results = self.extract_pafi_data(results,fixname)
         
         return results
@@ -89,7 +93,7 @@ class PAFIWorker(LAMMPSWorker):
         ----------
         results: ResultsHolder instance
             used to contain results and custom input paramaters
-            we want these inputs to override self.params()
+            we want these inputs to override self.parameters()
         
         Returns
         ----------
@@ -97,10 +101,10 @@ class PAFIWorker(LAMMPSWorker):
             Returns the input data and all output data appended 
             as dictionary key,value pairs
         """
+        
+    
         results = self.standard_pafi_pre_average(results)
-        
         results = self.constrained_average(results)
-        
         results = self.standard_pafi_post_average(results)
 
         return results
@@ -157,7 +161,7 @@ class PAFIWorker(LAMMPSWorker):
         Parameters
         ----------
         results : ResultsHolder instance
-            custom input data overrides params
+            custom input data overrides parameters
         
         Returns
         ----------
@@ -169,8 +173,9 @@ class PAFIWorker(LAMMPSWorker):
         
         self.kB = 8.617e-5 # where should I put this...
 
-        # we want any input paramaters in results() to override self.params()
-        params = lambda k: results(k) if results.has_key(k) else self.params(k)
+        # we want any input paramaters in results() to override parameters()
+        parameters = lambda k: results(k) \
+            if results.has_key(k) else self.parameters(k)
         
         # initialize on hyperplane
         r = results("ReactionCoordinate")
@@ -183,21 +188,21 @@ class PAFIWorker(LAMMPSWorker):
         n_atoms = self.get_natoms()
 
         # the PAFI fix
-        gamma = params("Friction")
-        overdamped = params("OverDamped")
-        seed = self.params.randint()
+        gamma = parameters("Friction")
+        overdamped = parameters("OverDamped")
+        seed = self.parameters.randint()
         cmd = f"fix pafi all pafi __pafipath {T} {gamma} {seed} "
         cmd += f"overdamped {overdamped} com 1\nrun 0"
         self.run_commands(cmd)
 
         # pre minimize (optional)
-        if params("PreMin"):
-            min_steps = params("MinSteps")
+        if parameters("PreMin"):
+            min_steps = parameters("MinSteps")
             self.run_commands(f"""
                 min_style fire
                 minimize 0 0.0001 {min_steps} {min_steps}
             """)
-        if params("PostMin"):
+        if parameters("PostMin"):
             self.change_x = -self.gather("x",1,3)
         
         # PreThermalize (optional)
@@ -206,8 +211,8 @@ class PAFIWorker(LAMMPSWorker):
         
         # establish temperature time average and thermalize
         pre_therm_hp = self.extract_fix("pafi",size=4)
-        steps = params("ThermSteps")
-        ave_steps = params("ThermWindow")
+        steps = parameters("ThermSteps")
+        ave_steps = parameters("ThermWindow")
         f_T = "c_pe" if overdamped==1 else "c_thermo_temp"
         self.run_commands(f"""
             reset_timestep 0
@@ -224,12 +229,12 @@ class PAFIWorker(LAMMPSWorker):
             run 0""")
         
         # main sampling run
-        steps = params("SampleSteps")
+        steps = parameters("SampleSteps")
         self.run_commands(f"""
             reset_timestep 0
             fix __ae all ave/time 1 {steps} {steps} {f_T}
             """)
-        if params("PostDump"):
+        if parameters("PostDump"):
             self.run_commands(f"""
             fix pafiax all ave/atom 1 {steps} {steps} x y z
             """)
@@ -241,20 +246,20 @@ class PAFIWorker(LAMMPSWorker):
         Parameters
         ----------
         results : ResultsHolder instance
-            custom input data overrides params
+            custom input data overrides parameters
         
         Returns
         ----------
         results : ResultsHolder instance
             add data and returns custom inputs as well    
         """
-        # we want any input paramaters in results() to override self.params()
-        params = lambda k: results(k) if results.has_key(k) else self.params(k)
+        # we want any input paramaters in results() to override self.parameters()
+        parameters = lambda k: results(k) if results.has_key(k) else self.parameters(k)
         n_atoms = self.get_natoms()
         
         # get final temperature
         sampleT = self.extract_fix("__ae")
-        if params("OverDamped")==1:
+        if parameters("OverDamped")==1:
             sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/self.kB
         results.set("postT",sampleT)
         self.run_commands(f"""
@@ -262,7 +267,7 @@ class PAFIWorker(LAMMPSWorker):
             run 0""")
         
         # average positions
-        if params("PostDump"):
+        if parameters("PostDump"):
             dx = self.gather("f_pafiax",type=1,count=3)
             dx[:,0] -= self.gather("f_ux",type=1,count=1).flatten()
             dx[:,1] -= self.gather("f_uy",type=1,count=1).flatten()
@@ -274,8 +279,8 @@ class PAFIWorker(LAMMPSWorker):
             self.run_commands("unfix pafiax")
         
         # minimize to test for MaxJump
-        if params("PostMin"):
-            min_steps = params("MinSteps")
+        if parameters("PostMin"):
+            min_steps = parameters("MinSteps")
         else:
             min_steps = 1
         self.run_commands(f"""
@@ -284,7 +289,7 @@ class PAFIWorker(LAMMPSWorker):
         """)
         self.change_x += self.gather("x",1,3)
         results.set("MaxJump",self.pbc_dist(self.change_x,axis=1).max())
-        results.set("Valid",bool(results("MaxJump")<params("MaxJumpThresh")))
+        results.set("Valid",bool(results("MaxJump")<parameters("MaxJumpThresh")))
         del self.change_x
         # unfix hyperplane
         self.run_commands("unfix pafi")

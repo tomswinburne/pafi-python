@@ -1,5 +1,5 @@
 import itertools
-from typing import List
+from typing import List,Dict
 import numpy as np
 import os
 from mpi4py import MPI
@@ -12,7 +12,8 @@ from ..results.Gatherer import Gatherer
 class PAFIManager(BaseManager):
     def __init__(self, world: MPI.Intracomm, 
                  xml_path:None|os.PathLike[str]=None,
-                 params:None|PAFIParser=None,
+                 parameters:None|PAFIParser=None,
+                 restart_data:None|os.PathLike[str]=None,
                  Worker:PAFIWorker=PAFIWorker,
                  Gatherer:Gatherer=Gatherer) -> None:
         """Default manager of PAFI, child of BaseManager
@@ -21,10 +22,12 @@ class PAFIManager(BaseManager):
         ----------
         world : MPI.Intracomm
             MPI communicator
-        xml_path : None or os.PathLike[str]
-            path to XML configuration file
-        params : None or PAFIParser object
-            preloaded PAFIParser object, 
+        xml_path : None or os.PathLike[str], optional
+            path to XML configuration file, default None
+        parameters : None or PAFIParser object, optional
+            preloaded PAFIParser object, default None
+        restart_data : None or os.PathLike[str], optional
+            path to CSV data file. Will read and skip already sampled parameters
         Worker : PAFIWorker, optional,
             Can be overwritten by child class, by default PAFIWorker
         Gatherer : Gatherer, optional
@@ -32,10 +35,10 @@ class PAFIManager(BaseManager):
         """
         
         
-        assert (not params is None) or (not xml_path is None)
-        if params is None:
-            params = PAFIParser(xml_path=xml_path)
-        super().__init__(world, params, Worker, Gatherer)
+        assert (not parameters is None) or (not xml_path is None)
+        if parameters is None:
+            parameters = PAFIParser(xml_path=xml_path)
+        super().__init__(world, parameters, Worker, Gatherer)
         
     
     
@@ -57,18 +60,36 @@ class PAFIManager(BaseManager):
         precision : int
             precision of field printout, default 4
         """
+        assert self.parameters.ready()
+
         if print_fields is None:
             print_fields = \
-                ["Rank","Temperature","ReactionCoordinate","aveF","vadrF"]
+                ["Temperature","ReactionCoordinate","aveF","aveF_std"]
+        
+        nRepeats = 1
+        if not self.parameters("nRepeats") is None:
+            if self.parameters("nRepeats")>1:
+                nRepeats = self.parameters("nRepeats")
+                print_fields = ["Repeat"] + print_fields
+        
         for f in print_fields:
             width = max(width,len(f))
         
-        def line(data,top=False):
-            format_string = ""
+        def line(data:List[float|int|str]|Dict[str,float|int|str])->str:
+            """Format list of results to print to screen
+            """
+            if len(data) == 0:
+                return ""
             format_string = ("{: >%d} "%width)*len(data)
             if isinstance(data,dict):
-                _fields = [data[f] for f in print_fields]
-            else:
+                _fields = []
+                for f in print_fields:
+                    if f=='Repeat':
+                        val = f"{int(data[f])}/{nRepeats}"
+                    else:
+                        val = data[f]
+                    _fields += [val]
+            else: 
                 _fields = data
             
             fields = []
@@ -78,46 +99,54 @@ class PAFIManager(BaseManager):
             return format_string.format(*fields)
 
         if self.rank==0:
-            print(f"""
+            screen_out = f"""
             Initialized {self.nWorkers} workers with {self.CoresPerWorker} cores
             <> == time averages,  av/err over ensemble
-            """)
-            print(line(print_fields,top=True))
-                
-        for axes_coord in itertools.product(*self.params.axes.values()):
-            dict_axes = dict(zip(self.params.axes.keys(), axes_coord))
-            #print(dict_axes)
+            """
+            if min(self.parameters.axes["Temperature"]) < 0.1:
+                screen_out+="""
+            *** FOR T=0K RUNS SampleSteps=1 AND ThermalSteps=1 ***
+            """
+            print(screen_out)
+            print(line(print_fields))
+        
+        last_coord = None
+        for axes_coord in itertools.product(*self.parameters.axes.values()):
+            dict_axes = dict(zip(self.parameters.axes.keys(), axes_coord))
+            
+            if self.rank==0:
+                if not last_coord is None and last_coord!=axes_coord[:-1]:
+                    print("\n"+line(print_fields))
+            if nRepeats>1:
+                dict_axes["Repeat"] = 1
             results = ResultsHolder()
             results.set_dict(dict_axes)
-
-            if results("Temperature")<0.1:
+            
+            if results("Temperature")<0.1:        
                 # Useful helper for including zero temperature cheaply...
-                results.set("SampleSteps",50)
-                results.set("ThermSteps",10)
-                results.set("ThermWindow",10)
+                results.set("SampleSteps",1)
+                results.set("ThermSteps",1)
+                results.set("ThermWindow",1)
             
-            
-            final_results = self.Worker.sample(results)
-            final_results.set("Rank",self.rank)
-            if self.rank in self.roots:
-                self.Gatherer.gather(final_results)
-                self.Gatherer.collate()
-            
-            
+            for repeat in range(nRepeats):
+                # Sampling run, returning ResultsHolder object
+                final_results = self.Worker.sample(results)
+                final_results.set("Repeat",repeat + 1)
 
-            self.world.Barrier()
-            res = final_results.get_dict(print_fields[1:],blanks="n/a")
-            res["Rank"] = self.rank
-            if self.rank in self.roots:
-                all_res_str = self.ensemble_comm.gather(res)
-            else:
-                all_res_str = None
-            self.world.Barrier()
-            if self.rank==0:
-                for res in all_res_str:
-                    print(line(res))
+                # incorporate results (this is only performed on local roots)
+                self.Gatherer.gather(final_results)
+                self.Gatherer.collate(repeat)
+
+                # wait
+                self.world.Barrier()
+                screen_out = self.Gatherer.get_dict(print_fields)
+                if self.rank == 0:
+                    print(line(screen_out))
+                    self.Gatherer.write_pandas(path=self.parameters.csv_file)
+            
+            last_coord = axes_coord[:-1]
+        
         if self.rank==0:
-            pandas_csv = self.params.csv_file
-            self.Gatherer.write_pandas(path=pandas_csv)
+            print(f"Data written to {self.parameters.csv_file}")
         
     

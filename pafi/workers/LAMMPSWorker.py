@@ -20,21 +20,23 @@ class LAMMPSWorker(BaseWorker):
         ----------
         comm : MPI.Intracomm
             MPI communicator
-        params : PAFIParser
+        parameters : PAFIParser
             Predefined or custom PAFIParser object
         worker_instance : int
             unique worker rank
         """
     def __init__(self, comm: MPI.Intracomm, 
-                 params: PAFIParser, worker_instance: int) -> None:
-        super().__init__(comm, params, worker_instance)
+                 parameters: PAFIParser, worker_instance: int,
+                 rank: int, roots: List[int]) -> None:
+        super().__init__(comm, parameters, worker_instance, rank, roots)
+        
         self.name = "LAMMPSWorker"
         self.last_error_message = ""
         self.start_lammps()
         if self.has_errors:
             print("ERROR STARTING LAMMPS!",self.last_error_message)
             return
-        start_config = self.params.PathwayConfigurations[0]
+        start_config = self.parameters.PathwayConfigurations[0]
         # TODO abstract
         self.run_script("Input")
         if self.has_errors:
@@ -56,7 +58,7 @@ class LAMMPSWorker(BaseWorker):
             Optionally 
 
         """
-        if self.params("LogLammps"):
+        if self.parameters("LogLammps"):
             logfile = 'log.lammps.%d' % self.worker_instance 
         else:
             logfile = 'none'
@@ -94,8 +96,11 @@ class LAMMPSWorker(BaseWorker):
         arguments : None | dict | ResultsHolder, optional
             will be used to replace wildcards, by default None
         """
-        if key in self.params.scripts:
-            script = self.params.parse_script(key,arguments=arguments)
+        if key in self.parameters.scripts:
+            if self.parameters("Verbose")>0 and self.rank==0:
+                print(f"RUNNING SCRIPT {key}")
+        
+            script = self.parameters.parse_script(key,arguments=arguments)
             self.run_commands(script)
 
     def run_commands(self,cmds : str | List[str]) -> bool:
@@ -105,11 +110,16 @@ class LAMMPSWorker(BaseWorker):
         cmd_list = cmds.splitlines() if isinstance(cmds,str) else cmds
         for cmd in cmd_list:
             try:
+                if self.parameters("Verbose")>0 and self.rank==0:
+                    print(f"TRYING COMMAND {cmd}")
                 self.L.command(cmd)
             except Exception as ae:
                 if self.local_rank==0:
-                    print("LAMMPS ERROR:",cmd,ae)
+                    message = f"LAMMPS ERROR: {cmd} {ae}"
+                else:
+                    message = None
                 self.last_error_message = ae
+                raise SyntaxError(message)
     
     def gather(self,name:str,type:None|int=None,count:None|int=None)->np.ndarray:
         """Wrapper of LAMMPS gather()
@@ -237,7 +247,7 @@ class LAMMPSWorker(BaseWorker):
         T : float, optional
             temperature in K, by default 0
         """
-        newscale = self.params.expansion(T)
+        newscale = self.parameters.expansion(T)
         rs = newscale / self.scale
         self.run_commands(f"""
             change_box all x scale {rs[0]} y scale {rs[1]} z scale {rs[2]}
