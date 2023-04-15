@@ -26,9 +26,6 @@ class PAFIParser(BaseParser):
             If path is not found
     """
     def __init__(self, xml_path: None|os.PathLike[str]=None) -> None:
-        if xml_path is None:
-            xml_path = os.path.dirname(os.path.abspath(__file__))
-            xml_path = os.path.join(xml_path,"DefaultConfiguration.xml")
         super().__init__(xml_path)
         
         # initial seed, but must be different across workers...

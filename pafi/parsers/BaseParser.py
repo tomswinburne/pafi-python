@@ -2,14 +2,14 @@ import numpy as np
 import os,glob
 import xml.etree.ElementTree as ET
 import numpy as np
-from typing import Union,Any
+from typing import Union,Any,List
 ScriptArg = Union[int,float,str]
 from ..results.ResultsHolder import ResultsHolder
 
 class BaseParser:
     """
     """
-    def __init__(self,xml_path:os.PathLike[str]) -> None:
+    def __init__(self,xml_path:None|os.PathLike[str]=None) -> None:
         """Base reader of PAFI XML configuration file
         
         Parameters
@@ -29,25 +29,26 @@ class BaseParser:
             If path is not found
         """
         self.set_default_parameters()
-        self.set_default_axes()
+        self.set_default_axes(empty=not xml_path is None)
         self.set_default_pathway()
         self.set_default_scripts()
-        
         self.xml_path = xml_path
-        assert os.path.exists(xml_path)
-        xml_file = ET.parse(xml_path)
-        self.PotentialLocation = None
-        for branch in xml_file.getroot():
-            if branch.tag=="Axes":
-                self.read_axes(branch)
-            elif branch.tag=="Parameters":
-                self.read_parameters(branch)
-            elif branch.tag=="PathwayConfigurations":
-                self.read_pathway(branch)
-            elif branch.tag=="Scripts":
-                self.read_scripts(branch)
-            else:
-                raise IOError("Error in XML file!")
+
+        if not xml_path is None:    
+            assert os.path.exists(xml_path)
+            xml_file = ET.parse(xml_path)
+            self.PotentialLocation = None
+            for branch in xml_file.getroot():
+                if branch.tag=="Axes":
+                    self.read_axes(branch)
+                elif branch.tag=="Parameters":
+                    self.read_parameters(branch)
+                elif branch.tag=="PathwayConfigurations":
+                    self.read_pathway(branch)
+                elif branch.tag=="Scripts":
+                    self.read_scripts(branch)
+                else:
+                    raise IOError("Error in XML file!")
         self.check_axes()
         self.check_output_location()
 
@@ -126,23 +127,23 @@ class BaseParser:
         self.parameters["MinSteps"] = 1000
         self.parameters["nRepeats"] = 1
         self.parameters["DumpFolder"] = './dumps'
-        self.parameters["OverDamped"] = False
+        self.parameters["OverDamped"] = 0
         self.parameters["Friction"] = 0.05
-        self.parameters["LogLammps"] = False
+        self.parameters["LogLammps"] = 0
         self.parameters["MaxJumpThresh"] = 0.4
         self.parameters["ReSampleThresh"] = 0.5
         self.parameters["maxExtraRepeats"] = 1
-        self.parameters["PostDump"] = False
-        self.parameters["PreMin"] = True
-        self.parameters["PostMin"] = True
-        self.parameters["SplinePath"] = True
-        self.parameters["RealMEPDist"] = True
+        self.parameters["PostDump"] = 0
+        self.parameters["PreMin"] = 1
+        self.parameters["PostMin"] = 1
+        self.parameters["SplinePath"] = 1
+        self.parameters["RealMEPDist"] = 1
         self.parameters["GlobalSeed"] = 137
-        self.parameters["FreshSeed"] = True
-        self.parameters["ReDiscretize"] = True
+        self.parameters["FreshSeed"] = 1
+        self.parameters["ReDiscretize"] = 1
         self.parameters["LinearThermalExpansion"] = np.zeros(3)
         self.parameters["QuadraticThermalExpansion"] = np.zeros(3)
-        self.parameters["CubicSplineBoundaryConditions"] = "clamped"
+        self.parameters["CubicSplineBoundaryConditions"] = "not-a-knot"
     
     def read_parameters(self,xml_parameters:ET.Element) -> None:
         """Read in simulation parameters defined in the XML file 
@@ -167,15 +168,24 @@ class BaseParser:
                 elif isinstance(o,float):
                     self.parameters[tag] = float(n)
                 elif isinstance(o,bool):
-                    self.parameters[tag] = bool(n)
+                    self.parameters[tag] = int(n)
                 elif isinstance(o,str):
                     self.parameters[tag] = n
                 elif isinstance(o,list):
                     self.paramaters[tag] = n
                 elif isinstance(o,np.ndarray):
-                    nn = np.array(n.strip().split(" "))
+                    nn = []
+                    for _n in n.strip().split(" "):
+                        if len(_n)>0:
+                            nn += [_n]
+                    nn = np.array(nn)
+
+                    print(tag,nn)
                     if "Expansion" in tag:
-                        nn = nn.astype(float)
+                        try:
+                            nn = nn.astype(float)
+                        except Exception as e:
+                            print(f"Error in Expansion parameters",tag,e)
                         if nn.size == 1:
                             self.parameters[tag] = np.ones(3)*nn.sum()
                         elif nn.size==3:
@@ -205,28 +215,53 @@ class BaseParser:
             print(f"Key {key} not found, setting as {value}")
             self.parameters[key] = value
         return self.parameters[key]
+    def set_pathway(self,
+                    paths:List[os.PathLike[str]],
+                    dir:os.PathLike[str]="./") -> None:
+        """Set the PathwayConfigurations
+        
+        Parameters
+        ----------
+        paths : List[os.PathLike[str]]
+           list of paths
+        dir : os.PathLike[str], optional
+            starting path, by default "./"
+        """
+        assert isinstance(paths,list)
+        self.PathwayFiles = paths
+        assert os.path.exists(dir)
+        self.PathwayDirectory = dir
+        self.PathwayConfigurations = []
+        for f in self.PathwayFiles:
+            path = os.path.join(dir.strip(),f.strip())
+            try:
+                assert os.path.exists(path)
+            except AssertionError as e:
+                print(path,e)
+                raise AssertionError
+            self.PathwayConfigurations += [path]
+        self.has_path = True
+    
+    def set_potential(self,path:os.PathLike[str])->None:
+        """Set potential pathway
+
+        Parameters
+        ----------
+        path : os.PathLike[str]
+            path to potential
+        """
+        assert os.path.exists(path)
+        self.PotentialLocation = path
+        self.has_path = True
+
 
     def set_default_pathway(self) -> None:
-        """Set default values for the <PathwayConfigurations> branch
         """
-        self.PathwayDirectory = "./"
-        self.PathwayFiles = [
-            "image_1.dat",
-            "image_2.dat",
-            "image_3.dat",
-            "image_4.dat",
-            "image_5.dat",
-            "image_6.dat",
-            "image_7.dat",
-            "image_8.dat",
-            "image_9.dat"
-        ]
-        self.PathwayConfigurations = []
+        Set default values for the <PathwayConfigurations> branch
+        """
+        self.has_path = False
+        self.has_potential = False
         
-        dir = self.PathwayDirectory
-        for f in self.PathwayFiles:
-            self.PathwayConfigurations += [os.path.join(dir,f)]
-    
     def read_pathway(self,xml_path_data:ET.ElementTree) -> None:
         """Read in pathway configuration paths defined in the XML file 
 
@@ -239,29 +274,13 @@ class BaseParser:
         for path_data in xml_path_data:
             tag = path_data.tag.strip()
             if tag=="Potential":
-                if os.path.exists(path_data.text.strip()):
-                    self.PotentialLocation = path_data.text.strip()
-        
-        has_dir = False
-        for path_data in xml_path_data:
-            tag = path_data.tag.strip()
+                potential = path_data.text.strip()
             if tag=="Directory":
-                self.PathwayDirectory = path_data.text.strip()
-                has_dir = True
-        
-        for path_data in xml_path_data:
-            tag = path_data.tag.strip()
+                dir = path_data.text.strip()
             if tag=="Files":
-                pc = path_data.text.strip().splitlines()
-                self.PathwayFiles = [p.strip() for p in pc]
-        self.PathwayConfigurations = []
-        if has_dir:
-            dir = self.PathwayDirectory
-            for f in self.PathwayFiles:
-                self.PathwayConfigurations += [os.path.join(dir,f)]
-        else:
-            self.PathwayConfigurations += [f for f in self.PathwayFiles]
-
+                files = path_data.text.strip().splitlines()
+        self.set_potential(potential)
+        self.set_pathway(files,dir)
         count=0
         total=len(self.PathwayConfigurations)
         for p in self.PathwayConfigurations:
@@ -280,9 +299,9 @@ class BaseParser:
             units metal
             atom_style atomic
             atom_modify map array sort 0 0.0
-            read_data  ./image_1.dat
+            read_data  %FirstPathConfiguration%
             pair_style    eam/fs
-            pair_coeff * * ./Fe.eam.fs Fe
+            pair_coeff * * %Potential% Fe
             run 0
             thermo 10
             run 0
@@ -302,18 +321,32 @@ class BaseParser:
         
         """
         for script in xml_scripts:
-            tag = script.tag.strip()
-            if not tag in self.scripts:
-                print(f"adding script {tag}")
-            self.scripts[tag] = script.text.strip()
+            if not script.text is None:
+                tag = script.tag.strip()
+                if not tag in self.scripts:
+                    print(f"adding script {tag}")
+                self.scripts[tag] = script.text.strip()
                 
     
     def as_Element(self) -> ET.Element:
-        """
-            Cast all parameters as xml.etree.ElementTreeElement
+        """Cast all parameters as xml.etree.ElementTreeElement
+
+        Returns
+        -------
+        xml.etree.ElementTree.Element
+            Data as xml.etree.ElementTree
         """
         xmlET = ET.Element("PAFI")
-        def add_branch(key,data):
+        def add_branch(key:str,data:Any):
+            """Add Axes, Parameter and Script data
+
+            Parameters
+            ----------
+            key : str
+                key
+            data : Any
+                data
+            """
             branch = ET.Element(key)
             for key, val in data.items():
                 child = ET.Element(key)
@@ -329,15 +362,31 @@ class BaseParser:
                     child.text = str(val)
                 branch.append(child)
             xmlET.append(branch)
+        
         add_branch('Axes',self.axes)
         add_branch('Parameters',self.parameters)
         add_branch('Scripts',self.scripts)
         
+        """
+            Add PathwayConfiguration data
+        """
         branch = ET.Element("PathwayConfigurations")
-        branch.text = ""
+        branch_branch = ET.Element("Files")
+        branch_branch.text = ""
         for p in self.PathwayConfigurations:
-            branch.text += p + "\n"
+            branch_branch.text += os.path.basename(p) + "\n"
+        branch.append(branch_branch)
+        
+        branch_branch = ET.Element("Potential")
+        branch_branch.text = self.PotentialLocation
+        branch.append(branch_branch)
+
+        branch_branch = ET.Element("Directory")
+        branch_branch.text = self.PathwayDirectory
+        branch.append(branch_branch)
         xmlET.append(branch)
+
+        
         
         return xmlET
 
