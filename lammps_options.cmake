@@ -5,7 +5,6 @@ set(CMAKE_INSTALL_PREFIX "$ENV{PREFIX}" CACHE BOOL "" FORCE)
 set(CMAKE_BUILD_PARALLEL_LEVEL 4) 
 #set(Python_FIND_FRAMEWORK LAST)
 
-#find_package(Python 3.11 EXACT REQUIRED)
 set(PYTHON_EXECUTABLE /Users/ts/opt/miniconda3/envs/mpi/bin/python CACHE BOOL "" FORCE) 
 
 # enforce c++11 standards
@@ -18,7 +17,7 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 set(LAMMPS_EXCEPTIONS ON CACHE BOOL "" FORCE)
 
 # minimal packages to run example (MANYBODY, EXTRA-FIX) and generate new pathway (REPLICA for "fix neb")
-set(ALL_PACKAGES MANYBODY EXTRA-FIX REPLICA ML-SNAP)
+set(ALL_PACKAGES MANYBODY EXTRA-FIX REPLICA ML-SNAP MOLECULE PHONON)
 
 foreach(PKG ${ALL_PACKAGES})
   set(PKG_${PKG} ON CACHE BOOL "" FORCE)

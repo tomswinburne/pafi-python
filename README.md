@@ -42,8 +42,8 @@ git clone https://github.com/tomswinburne/pafi.git
 mkdir lammps/build
 cd lammps/build
 cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
-cmake --build .
-cmake --install . # to PREFIX
+make -j
+make install # to PREFIX
 cd ..
 
 # PAFI build

@@ -33,6 +33,9 @@ class ResultsProcessor:
             for dp in data_path:
                 if os.path.exists(dp):
                     data += [pd.read_csv(dp)]
+        else:
+            assert os.path.exists(data_path)
+            self.pd_data = pd.read_csv(data_path)
 
     def integrate(self,
                   argument:str='ReactionCoordinate',
@@ -64,13 +67,13 @@ class ResultsProcessor:
         pd_fields = list(pd_data.columns) + [x,y+"_int",y+'_int_std']
         all_data = []
         for p in pd_data.iterrows():
-            ee = self.ens_data.copy()
+            ee = self.pd_data.copy()
             for key,val in p[1].items():
                 ee = ee[ee[key]==val]
-            data = np.r_[[ee[w].to_numpy() for w in [x,y,y+"_std"]]].T
-            data = self.remesh(data[data[:,0].argsort(),:],remesh)
-            y_a = np.append(np.zeros(1),cumtrapz(data[:,1],data[:,0]))
-            y_e = np.append(np.zeros(1),cumtrapz(data[:,2],data[:,0]))
             
-            all_data += [[*list(p[1].to_dict().values()),data[:,0],y_a,y_e]]
+            data = np.r_[[ee[w].to_numpy() for w in [x,y]]].T
+            #data = self.remesh(data[data[:,0].argsort(),:],remesh)
+            y_a = np.append(np.zeros(1),cumtrapz(data[:,1],data[:,0]))
+            #y_e = np.append(np.zeros(1),cumtrapz(data[:,2],data[:,0]))
+            all_data += [[*list(p[1].to_dict().values()),data[:,0],y_a]]#,y_e]]
         return pd.DataFrame(data=all_data,columns=pd_fields)

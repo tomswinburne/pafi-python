@@ -2,14 +2,21 @@ import sys
 sys.path.insert(1,'../')
 from mpi4py import MPI
 
+def test_plotting():
+    from pafi import ResultsProcessor
+    p = ResultsProcessor(data_path="dumps/pafi_data_0.csv")
+    print(p.integrate())
 
 def test_complete_input():
     """Load in complete configuration file
     """
-    from pafi import PAFIManager
+    from pafi import PAFIManager,ResultsProcessor
     manager = PAFIManager(MPI.COMM_WORLD,"./CompleteConfiguration.xml")
     manager.run()
     manager.close()
+    p = ResultsProcessor(data_path=manager.parameters.csv_file)
+    print(p.integrate())
+
 
 def test_partial_input():
     """Overwrite default parameters with partial configuration file
@@ -87,9 +94,9 @@ def test_custom_worker():
                 ["Temperature","Lambda","ReactionCoordinate","aveF","ave_dV"])
 
 if __name__ == "__main__":
-    #run_complete_input()
+    test_plotting()
     #run_partial_input()
-    test_custom_worker()
+    #test_custom_worker()
 
 exit()
 
