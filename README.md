@@ -1,5 +1,6 @@
 
-<h1> BETA PYTHON-ONLY VERSION IN DEVELOPMENT - STABLE C++ VERSION AT https://github.com/tomswinburne/pafi</h1>
+<h1> BETA PYTHON-ONLY VERSION IN DEVELOPMENT<br> 
+  STABLE C++ VERSION AT https://github.com/tomswinburne/pafi</h1>
 
 <img src="doc/pafi_title.png" width=500></img>
 
