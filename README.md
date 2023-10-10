@@ -1,5 +1,5 @@
 <h1>PYTHON VERSION BEAT-ONLY, IN DEVELOPMENT</h1>
-  <h2>FOR STABLE C++ VERSION PLEASE VISIT
+  <h2>STABLE C++ VERSION AT
   https://github.com/tomswinburne/pafi</h2>
 
 <img src="doc/pafi_title.png" width=500></img>
