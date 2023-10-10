@@ -1,4 +1,4 @@
-<h1>PYTHON VERSION BEAT-ONLY, IN DEVELOPMENT</h1>
+<h1>PYTHON VERSION BETA-ONLY, IN DEVELOPMENT</h1>
   <h2>STABLE C++ VERSION AT
   https://github.com/tomswinburne/pafi</h2>
 
