@@ -1,6 +1,6 @@
-**BETA PYTHON-ONLY VERSION IN DEVELOPMENT<br> 
-  FOR STABLE C++ VERSION PLEASE VISIT <br>
-  https://github.com/tomswinburne/pafi**
+<h1>BETA PYTHON VERSION IN DEVELOPMENT</h1>
+  ***FOR STABLE C++ VERSION PLEASE VISIT
+  https://github.com/tomswinburne/pafi***
 
 <img src="doc/pafi_title.png" width=500></img>
 
