@@ -1,10 +1,12 @@
+
 # Mac OSX indexing
 .DS_Store
 */.DS_Store
 
 # test data
 build/*
-
+arx/*
+examples/dumps/*
 lib/*
 notes.py
 

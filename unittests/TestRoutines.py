@@ -33,9 +33,9 @@ def test_python_input():
     # load in default parameters
     parameters = PAFIParser()
     # set path wildcard, assuming some_file_name_INTEGER.dat format
-    parameters.set_pathway("systems/EAM-EAM-SIA-Fe/image_*.dat")
+    parameters.set_pathway("systems/EAM-EAM-Vac-Fe/image_*.dat")
     # set interatomic potential
-    parameters.set_potential("systems/EAM-EAM-SIA-Fe/Fe.eam.fs")
+    parameters.set_potential("systems/EAM-EAM-Vac-Fe/Fe.eam.fs")
     # restrict to zero temperature
     parameters.axes["Temperature"] = [100.]
     parameters.set("nRepeats",2)
@@ -94,8 +94,9 @@ def test_custom_worker():
                 ["Temperature","Lambda","ReactionCoordinate","aveF","ave_dV"])
 
 if __name__ == "__main__":
-    test_plotting()
-    #run_partial_input()
+    #test_plotting()
+    test_python_input()
+    #test_partial_input()
     #test_custom_worker()
 
 exit()
