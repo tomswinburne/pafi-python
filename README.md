@@ -42,10 +42,12 @@ cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
 make -j
 make install # to PREFIX
 make install python
+
+# back to parent
 cd ..
 
 # PAFI build
-cd pafi/build
+cd pafi
 pip install -e .
 ```
 
