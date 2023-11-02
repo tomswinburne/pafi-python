@@ -1,9 +1,7 @@
-<h2>BETA (PYTHON) Code, STABLE (C++) code at https://github.com/tomswinburne/pafi</h2>
 <img src="doc/pafi_title.png" width=500></img>
-
 <h2> PAFI: MD evaluation of free energy barriers beyond HTST</h2>
 v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License, thomas dot swinburne at cnrs.fr<br><br>
-
+<b>This (python) code is currently in beta, stable (C++) release available [here](https://github.com/tomswinburne/pafi)</b>
 PAFI performs constrained sampling on [NEB](https://docs.lammps.org/fix_neb.html) hyperplanes in [LAMMPS](https://docs.lammps.org), 
 analytically reformulating an exact expression for the free energy gradient used in the
 [Adaptive Biasing Force](https://pubs.acs.org/doi/10.1021/jp506633n) method.
