@@ -1,7 +1,4 @@
-<h1>PYTHON VERSION BETA-ONLY, IN DEVELOPMENT</h1>
-  <h2>STABLE C++ VERSION AT
-  https://github.com/tomswinburne/pafi</h2>
-
+<h2>BETA (PYTHON) Code, STABLE (C++) code at https://github.com/tomswinburne/pafi</h2>
 <img src="doc/pafi_title.png" width=500></img>
 
 <h2> PAFI: MD evaluation of free energy barriers beyond HTST</h2>
