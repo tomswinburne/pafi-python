@@ -41,6 +41,7 @@ cd lammps/build
 cmake -C ../../pafi/cmake/lammps_options.cmake ../cmake
 make -j
 make install # to PREFIX
+make install python
 cd ..
 
 # PAFI build
