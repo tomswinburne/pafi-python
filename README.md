@@ -1,7 +1,7 @@
 <img src="doc/pafi_title.png" width=500></img>
 <h2> PAFI: MD evaluation of free energy barriers beyond HTST</h2>
 v0.9 :copyright: TD Swinburne and M-C Marinica 2023 MIT License, thomas dot swinburne at cnrs.fr<br><br>
-<h3>This (python) code is currently in beta, stable (C++) release available [here](https://github.com/tomswinburne/pafi)</h3>
+<h3>Currently in beta, stable release available [here](https://github.com/tomswinburne/pafi)</h3>
 
 PAFI performs constrained sampling on [NEB](https://docs.lammps.org/fix_neb.html) hyperplanes in [LAMMPS](https://docs.lammps.org), 
 analytically reformulating an exact expression for the free energy gradient used in the
