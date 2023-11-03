@@ -146,8 +146,8 @@ class PAFIWorker(LAMMPSWorker):
         """
         res = {}
         fix_data = self.extract_fix(name,size=4)
-        res['aveF'] = -fix_data[0] * self.norm_t
-        res['varF'] = fix_data[1]**2 * self.norm_t**2 - res['aveF']**2
+        res['FreeEnergyGradient'] = -fix_data[0] * self.norm_t
+        res['FreeEnergyGradientVariance'] = fix_data[1]**2 * self.norm_t**2 - res['FreeEnergyGradient']**2
         res['avePsi'] = fix_data[2]
         res['dXTangent'] = fix_data[3]
         results.set_dict(res)

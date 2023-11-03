@@ -9,13 +9,18 @@ from ..results.ResultsHolder import ResultsHolder
 class BaseParser:
     """
     """
-    def __init__(self,xml_path:None|os.PathLike[str]=None) -> None:
+    def __init__(self,
+                xml_path:None|os.PathLike[str]=None,
+                postprocessing:bool=False,
+                rank=0) -> None:
         """Base reader of PAFI XML configuration file
         
         Parameters
         ----------
         xml_path : os.PathLike[str]
-            path to XML file
+            path to XML file, default None
+        postprocessing: bool, optional
+            are we just looking in postprocess?, default False
         
         Methods
         ----------
@@ -28,17 +33,20 @@ class BaseParser:
         IOError
             If path is not found
         """
+        self.postprocessing = postprocessing
         self.set_default_parameters()
         self.set_default_axes(empty=not xml_path is None)
         self.set_default_pathway()
         self.set_default_scripts()
         self.xml_path = xml_path
-
+        self.rank=rank
+        
         if not xml_path is None:    
             assert os.path.exists(xml_path)
-            xml_file = ET.parse(xml_path)
+            xml_tree = ET.parse(xml_path)
+        
             self.PotentialLocation = None
-            for branch in xml_file.getroot():
+            for branch in xml_tree.getroot():
                 if branch.tag=="Axes":
                     self.read_axes(branch)
                 elif branch.tag=="Parameters":
@@ -49,6 +57,12 @@ class BaseParser:
                     self.read_scripts(branch)
                 else:
                     raise IOError("Error in XML file!")
+                if self.postprocessing:
+                    self.suffix = int(xml_path.split("_")[-1].split(".")[0])
+                    self.has_suffix=True
+        
+        self.suffix = -1
+        self.xml_file = None
         self.check()
 
     def check(self)->None:
@@ -86,9 +100,9 @@ class BaseParser:
                 os.mkdir(df)
             except Exception as e:
                 print(f"DumpFolder {df} cannot be made!",e)
-        else:
-            self.suffix=0
-            self.find_suffix_and_write()
+        
+        self.suffix=0
+        self.find_suffix_and_write()
     
     def set_default_axes(self,empty=True) -> None:
         """Set defaults for "Axes" attribute
@@ -127,7 +141,19 @@ class BaseParser:
             else:
                 self.axes[axis.tag] = data.copy()
 
+    def to_dict(self) -> dict:
+        """Export axes and parameters as a nested dictionary
 
+        Returns
+        -------
+        dict
+            Dictionary-of-dictionaries with two keys 'axes' and 'parameters'
+        """
+        out_dict = {}
+        out_dict['axes'] = self.axes.copy()
+        out_dict['parameters'] = self.parameters.copy()
+        return out_dict
+    
     def set_default_parameters(self) -> None:
         """Set default values for <Parameters> data
         read_parameters() will *only* overwrite these values
@@ -324,7 +350,6 @@ class BaseParser:
                 dir = path_data.text.strip()
             if tag=="Files":
                 files = path_data.text.strip().splitlines()
-
         self.set_potential(potential)
         self.set_pathway(files,dir)
         
@@ -436,14 +461,22 @@ class BaseParser:
         ET.indent(Element, '  ')
         return str(ET.tostring(Element)).replace('\\n','\n')
     
-    def to_xml_file(self,xml_file:str)->None:
+    def to_xml_file(self,xml_file:None|str=None)->None:
         """Write all paramaters as XML file
         
         Parameters
         ----------
-        xml_file : str
-            path to XML file
+        xml_file : str, optional
+            path to XML file, default None
         """
+        if xml_file is None:
+            xml_file = self.xml_file
+        assert not xml_file is None
+        print(f"""
+                Writing PAFI config file {xml_file}
+                Will write PAFI data to {self.csv_file}
+                """)
+            
         Element = self.as_Element()
         ElementTree = ET.ElementTree(Element)
         ET.indent(ElementTree, '  ')
@@ -561,13 +594,11 @@ class BaseParser:
                 suffix = int(f.split("_")[-1][:-4])
                 self.suffix = max(self.suffix,suffix)
             self.suffix += 1
-            xml_file = os.path.join(df,f"config_{self.suffix}.xml")
+            self.xml_file = os.path.join(df,f"config_{self.suffix}.xml")
             self.csv_file = os.path.join(df,f"pafi_data_{self.suffix}.csv")
-            print(f"""
-                Writing PAFI configuration to {self.csv_file}
-                """)
             self.has_suffix=True
-            self.to_xml_file(xml_file=xml_file)
+            if self.rank==0:
+                self.to_xml_file()
             
 
 

@@ -143,6 +143,8 @@ class BaseGatherer:
                     raise IOError("Unknown directory for writing csv!")
                 else:
                     df = pd.DataFrame(self.all_data)
+                    df.metadata = " ".join(list(self.params.axes.keys()))
+                    #df.attrs = self.params.to_dict().copy()
                     df.to_csv(path)
     
     def read_pandas(self,path:os.PathLike[str])->None:

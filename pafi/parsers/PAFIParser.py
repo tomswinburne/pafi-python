@@ -8,29 +8,30 @@ from .BaseParser import BaseParser
 
 class PAFIParser(BaseParser):
     """Default reader of PAFI XML configuration file
+    
+    Parameters
+    ----------
+    xml_path : os.PathLike[str]
+        path to XML file, default None
+    postprocessing: bool, optional
+        are we just looking in postprocess?, default False
+    Methods
+    ----------
+    __call__
+    find_suffix_and_write
+    
 
-        Parameters
-        ----------
-        xml_path : os.PathLike[str] or None
-            path to XML file if not None, else load default parameters
-        
-        Methods
-        ----------
-        __call__
-        find_suffix_and_write
-        
-
-        Raises
-        ------
-        IOError
-            If path is not found
+    Raises
+    ------
+    IOError
+        If path is not found
     """
-    def __init__(self, xml_path: None|os.PathLike[str]=None) -> None:
-        super().__init__(xml_path)
-        
+    def __init__(self,
+            xml_path:None|os.PathLike[str]=None,
+            postprocessing:bool=False,rank:int=0) -> None:
+        super().__init__(xml_path,postprocessing,rank)
         # initial seed, but must be different across workers...
         self.seeded = False
-        
         # repeats, valid bounds (see set_min_valid())
         self.nRepeats = self.parameters["nRepeats"]
         self.maxExtraRepeats = self.parameters["maxExtraRepeats"]         
@@ -178,6 +179,16 @@ class PAFIParser(BaseParser):
 
         """
         return result
+    
+    def to_dict(self) -> dict:
+        """Export axes and parameters as a nested dictionary
+
+        Returns
+        -------
+        dict
+            Dictionary-of-dictionaries with two keys 'axes' and 'parameters'
+        """
+        return super().to_dict()
     
     
 

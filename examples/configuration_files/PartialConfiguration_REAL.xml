@@ -14,7 +14,7 @@ DEFAULT PARAMETERS FOR PAFI
 
       Iteration sequence is nested, in order of appearance
     -->
-    <Temperature>0.</Temperature>
+    <Temperature>0. 500. 6</Temperature>
     <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
   </Axes>
 
@@ -28,14 +28,17 @@ DEFAULT PARAMETERS FOR PAFI
     -->
     <GlobalSeed>137</GlobalSeed>
 
+    <!-- Number of samples per plane per worker -->
+    <nRepeats> 2 </nRepeats>
+
     <!-- Data gathering steps -->
-    <SampleSteps>20</SampleSteps>
+    <SampleSteps>1500</SampleSteps>
 
     <!-- Steps for thermalization -->
-    <ThermSteps> 20 </ThermSteps>
+    <ThermSteps> 1000 </ThermSteps>
     
     <!-- Average last ThermWindow steps to check thermalization  -->
-    <ThermWindow> 10 </ThermWindow>
+    <ThermWindow> 200 </ThermWindow>
 
     <!-- Max steps for optional in-plane minimizations (see below) -->
     <MinSteps> 1000 </MinSteps>
@@ -50,10 +53,10 @@ DEFAULT PARAMETERS FOR PAFI
   -->
   <PathwayConfigurations>
     <Potential>
-    ../examples/systems/EAM-EAM-SIA-Fe/Fe.eam.fs
+    ../examples/systems/EAM-SIA-Fe/Fe.eam.fs
     </Potential>
     <Directory>
-    ../examples/systems/EAM-EAM-SIA-Fe/
+    ../examples/systems/EAM-SIA-Fe/
     </Directory>
   </PathwayConfigurations>
 </PAFI>

@@ -36,8 +36,12 @@ class PAFIManager(BaseManager):
         
         
         assert (not parameters is None) or (not xml_path is None)
+        
         if parameters is None:
-            parameters = PAFIParser(xml_path=xml_path)
+            # TODO have standalone check for suffix in config_[suffix].xml?
+            # not the best solution currently if we use BaseManager alone....
+            parameters = PAFIParser(xml_path=xml_path,rank=world.Get_rank())
+        
         super().__init__(world, parameters, Worker, Gatherer)
         
     
@@ -54,7 +58,7 @@ class PAFIManager(BaseManager):
         ----------
         print_fields : List[str] or None
             Fields to print to screen, default None. 
-            If None, will print "Temperature","ReactionCoordinate","aveF"
+            If None, will print "Temperature","ReactionCoordinate","FreeEnergyGradient"
         width : int
             character count of field printout, default 10
         precision : int
@@ -64,7 +68,7 @@ class PAFIManager(BaseManager):
 
         if print_fields is None:
             print_fields = \
-                ["Temperature","ReactionCoordinate","aveF","aveF_std"]
+                ["Temperature","ReactionCoordinate","FreeEnergyGradient","FreeEnergyGradient_std"]
         
         nRepeats = 1
         if not self.parameters("nRepeats") is None:
