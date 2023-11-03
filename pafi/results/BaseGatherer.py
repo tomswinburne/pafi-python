@@ -78,6 +78,7 @@ class BaseGatherer:
 
                 if self.all_data is None:
                     self.all_data = {k:[] for k in all_epoch_data[0].keys()}
+                
                 for k in all_epoch_data[0].keys():
                     self.all_data[k] += list(d[k] for d in all_epoch_data)
                     self.last_data[k] += list(d[k] for d in all_epoch_data)

@@ -114,7 +114,7 @@ class ResultsProcessor:
         self.count_key = 'ValidCount'
         axes = set(self.axes.keys())
         ave_data = {f:[] for f in self.fields}
-        std_data = {f+"_std":[] for f in self.fields}
+        var_data = {f+"_var":[] for f in self.fields}
         count_data = {self.count_key:[]}
         
         # iterate over all axes
@@ -131,13 +131,14 @@ class ResultsProcessor:
             for f in self.fields:
                 if valid_c < 1:
                     ave_data[f] += [0.0]
-                    std_data[f+"_std"] += [0.0]
+                    var_data[f+"_var"] += [0.0]
                 else:
                     valid_d = sel_data[f][valid_r].to_numpy()
                     ave_data[f] += [valid_d.mean()]
-                    std_data[f+"_std"] += [valid_d.std()/np.sqrt(valid_c)]
+                    var_data[f+"_var"] += [valid_d.var()/valid_c]
+
         
-        self.ave_data = pd.DataFrame({**ave_data,**count_data,**std_data})
+        self.ave_data = pd.DataFrame({**ave_data,**count_data,**var_data})
         if return_pd:
             return self.ave_data
 
@@ -179,7 +180,8 @@ class ResultsProcessor:
         # determine keys
         x_key = argument
         y_key = target
-        v_key = variance
+        v_key = target+"_var"
+        y_key_std = target+"_err"
 
         i_key = target+"_integrated"
         i_key_std = target+"_integrated_err"
@@ -213,8 +215,7 @@ class ResultsProcessor:
             for i,x in enumerate(x_val):
                 x_sel_data = sel_data[np.isclose(sel_data[x_key],x)]
                 y_val[i][0] = x_sel_data[y_key]
-                # See writeup for why we have extra 1/N term
-                y_val[i][1] = x_sel_data[v_key] / x_sel_data[self.count_key]
+                y_val[i][1] = x_sel_data[v_key]
 
             y_spl = interp1d(x_val,y_val,axis=0,kind='cubic')
             dense_x = np.linspace(x_val.min(),x_val.max(),remesh*x_val.size)
@@ -228,6 +229,7 @@ class ResultsProcessor:
                 out_row[x_key] = dense_x
                 out_row[y_key] = dense_y[:,0]
                 out_row[v_key] = dense_y[:,1]
+                out_row[y_key_std] = np.sqrt(np.abs(dense_y[:,1]))
                 out_row[i_key] = dense_i[:,0]
                 out_row[i_key_std] = np.sqrt(np.abs(dense_i[:,1]))
                 out_array += [out_row]

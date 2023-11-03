@@ -223,7 +223,7 @@ class PAFIWorker(LAMMPSWorker):
         
         if overdamped==1:
             sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/self.kB
-        results.set("preT",sampleT)
+        results.set("preTemperature",sampleT)
         self.run_commands(f"""
             unfix __ae
             run 0""")
@@ -261,7 +261,7 @@ class PAFIWorker(LAMMPSWorker):
         sampleT = self.extract_fix("__ae")
         if parameters("OverDamped")==1:
             sampleT = (sampleT-results("MinEnergy"))/1.5/n_atoms/self.kB
-        results.set("postT",sampleT)
+        results.set("postTemperature",sampleT)
         self.run_commands(f"""
             unfix __ae
             run 0""")

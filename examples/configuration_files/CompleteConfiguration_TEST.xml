@@ -14,7 +14,7 @@ DEFAULT PARAMETERS FOR PAFI
 
       Iteration sequence is nested, in order of appearance
     -->
-    <Temperature>0.</Temperature>
+    <Temperature>0. 100.0</Temperature>
     <ReactionCoordinate>0.0 1.0 11</ReactionCoordinate>
   </Axes>
 
@@ -40,16 +40,16 @@ DEFAULT PARAMETERS FOR PAFI
     <CoresPerWorker> 1 </CoresPerWorker>
 
     <!-- Number of samples per plane per worker -->
-    <nRepeats> 1 </nRepeats>
+    <nRepeats> 2 </nRepeats>
 
     <!-- Data gathering steps -->
-    <SampleSteps>20</SampleSteps>
+    <SampleSteps>100</SampleSteps>
 
     <!-- Steps for thermalization -->
-    <ThermSteps> 20 </ThermSteps>
+    <ThermSteps> 50 </ThermSteps>
     
     <!-- Average last ThermWindow steps to check thermalization  -->
-    <ThermWindow> 10 </ThermWindow>
+    <ThermWindow> 50 </ThermWindow>
 
     <!-- Max steps for optional in-plane minimizations (see below) -->
     <MinSteps> 1000 </MinSteps>

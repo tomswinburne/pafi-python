@@ -68,7 +68,7 @@ class PAFIManager(BaseManager):
 
         if print_fields is None:
             print_fields = \
-                ["Temperature","ReactionCoordinate","FreeEnergyGradient","FreeEnergyGradient_std"]
+                ["Temperature","postTemperature","ReactionCoordinate","FreeEnergyGradient","FreeEnergyGradient_std"]
         
         nRepeats = 1
         if not self.parameters("nRepeats") is None:
@@ -126,11 +126,13 @@ class PAFIManager(BaseManager):
             results = ResultsHolder()
             results.set_dict(dict_axes)
             
-            if results("Temperature")<0.1:        
-                # Useful helper for including zero temperature cheaply...
-                results.set("SampleSteps",1)
-                results.set("ThermSteps",1)
-                results.set("ThermWindow",1)
+            
+            # Useful helper for including zero temperature cheaply...
+            for k in ["SampleSteps","ThermSteps","ThermWindow"]:
+                if results("Temperature")<0.1:
+                    results.set(k,1)
+                else:
+                    results.set(k,self.parameters(k))
             
             for repeat in range(nRepeats):
                 # Sampling run, returning ResultsHolder object
