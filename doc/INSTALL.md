@@ -56,7 +56,7 @@ Happily, `PAFI` is pure python and so does not require compilation.
 You can use `PAFI` in your code simply with three lines:
 ```python
 import sys
-sys.path.insert(1,/path/to/pafi/root)
+sys.path.insert(1,'/path/to/pafi/root')
 import pafi
 ```
 Alternatively, the `PAFI` library can be installed with `pip`:
