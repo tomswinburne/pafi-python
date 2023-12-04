@@ -43,26 +43,26 @@ LMP_INC =	-DLAMMPS_GZIP -DLAMMPS_MEMALIGN=64  -DLAMMPS_EXCEPTIONS
   cp *.h ${PREFIX}/include/lammps/
 ```
 
-
-## Compile `PAFI`
-0. `PAFI` requires `cmake` to compile:
-- On a cluster, try `module load cmake`
-- On Linux, try `[apt/yum] install cmake`
-- Alternatively [download](https://cmake.org/download/) and install `cmake` manually
-
-*Technical point: `LAMMPS` can also be built with `cmake` . However, this is causes
-[complications](https://lammps.sandia.gov/doc/Build_link.html) with static linking.*
-
-1. Specify compiler in CMakeLists.txt:
-```make
-   set(CMAKE_CXX_COMPILER path/to/mpic++)
+5. You should be able to run `mpirun -np 4 python test.py` without errors, where `test.py` reads
+```python
+from mpi4py import MPI
+from lammps import lammps
+lmp = lammps(comm=MPI.COMM_WORLD)
+lmp.close()
 ```
 
-2. Make pafi build folder, run cmake and make
+## Install `PAFI`
+Happily, `PAFI` is pure python and so does not require compilation. 
+You can use `PAFI` in your code simply with three lines:
+```python
+import sys
+sys.path.insert(1,/path/to/pafi/root)
+import pafi
+```
+Alternatively, the `PAFI` library can be installed with `pip`:
 ```bash
-   export PREFIX=${HOME}/.local # if in different shell to LAMMPS compilation
-   mkdir build
-   cd build
-   cmake ..
-   make # or try make -j4 for parallel make using 4 cores
+cd /path/to/pafi/root
+pip install -e .
 ```
+
+
